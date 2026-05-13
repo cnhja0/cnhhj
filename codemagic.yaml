@@ -18,7 +18,7 @@ workflows:
   # Workflow principal — APK de debug pronto para instalar no Android
   android-debug-apk:
     name: CNHhj Instrutor — Android Debug APK
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     max_build_duration: 60   # minutos
     environment:
       flutter: stable
