@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────────
+# GitHub Actions — Deploy Flutter Web para GitHub Pages
+#
+# Toda vez que houver push na branch `main`, este workflow:
+#   1. Compila o app Flutter para Web
+#   2. Publica em https://cnhja0.github.io/cnhhj/
+#
+# Custo: zero (Actions é gratuito para repos públicos e tem 2000 min/mês
+# de free tier para privados).
+# ─────────────────────────────────────────────────────────────────────
+
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # permite rodar manualmente pela UI do GitHub
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repo
+        uses: actions/checkout@v4
+
+      - name: Instalar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Gerar plataforma web
+        working-directory: instrutor_app
+        run: flutter create --platforms=web --project-name cnhhj_instrutor .
+
+      - name: Instalar dependências
+        working-directory: instrutor_app
+        run: flutter pub get
+
+      - name: Compilar Flutter Web
+        working-directory: instrutor_app
+        # base-href precisa coincidir com o nome do repo (subpath do GitHub Pages)
+        run: flutter build web --release --base-href "/cnhhj/"
+
+      - name: Empacotar artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: instrutor_app/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
