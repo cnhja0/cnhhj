@@ -35,7 +35,7 @@ dependencies:
   image_picker: ^1.1.2
 
   # ─── Utilidades ────────────────────────────────────────────────────
-  intl: ^0.19.0
+  intl: ^0.20.2
   collection: ^1.18.0
 
 dev_dependencies:
