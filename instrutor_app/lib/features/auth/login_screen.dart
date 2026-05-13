@@ -37,8 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
     if (!mounted) return;
     if (ok) {
-      // TODO: navegar para home quando ela existir.
-      CnhhjSnack.success(context, 'Login realizado!');
+      context.go(AppRoutes.lesson);
     } else {
       final String? err = ref.read(loginControllerProvider).errorMessage;
       if (err != null) CnhhjSnack.error(context, err);
@@ -50,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref.read(loginControllerProvider.notifier).signInWithGoogle();
     if (!mounted) return;
     if (ok) {
-      CnhhjSnack.success(context, 'Login realizado!');
+      context.go(AppRoutes.lesson);
     } else {
       final String? err = ref.read(loginControllerProvider).errorMessage;
       if (err != null) CnhhjSnack.error(context, err);
