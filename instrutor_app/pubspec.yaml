@@ -49,6 +49,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
-    - .env
 
-  # Fontes customizadas serão adicionadas via google_fonts em runtime.
+  # O `.env` não é declarado como asset porque está no .gitignore — usado
+  # apenas localmente. Sem `.env`, o app usa defaults (modo mock).
+  # Fontes customizadas via google_fonts em runtime.
