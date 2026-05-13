@@ -1,0 +1,98 @@
+# ─────────────────────────────────────────────────────────────────────
+# Codemagic CI/CD — CNHhj
+#
+# Este arquivo configura a build automática do app do Instrutor no
+# Codemagic (codemagic.io). Toda vez que você fizer `git push` no GitHub,
+# o Codemagic vai:
+#   1. Clonar o repositório
+#   2. Adicionar as pastas android/ e ios/ (não comitadas) via `flutter create .`
+#   3. Instalar dependências (flutter pub get)
+#   4. Rodar análise estática (flutter analyze) — sem bloquear o build
+#   5. Compilar APK de debug
+#   6. Enviar o APK por e-mail para você instalar no celular Android
+#
+# Free tier do Codemagic: 500 minutos/mês — suficiente para vários builds.
+# ─────────────────────────────────────────────────────────────────────
+
+workflows:
+  # Workflow principal — APK de debug pronto para instalar no Android
+  android-debug-apk:
+    name: CNHhj Instrutor — Android Debug APK
+    instance_type: linux_x2
+    max_build_duration: 60   # minutos
+    environment:
+      flutter: stable
+      vars:
+        FLUTTER_DIR: instrutor_app
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+        - pattern: develop
+          include: true
+          source: true
+    scripts:
+      - name: Versões do toolchain
+        script: |
+          flutter --version
+          dart --version
+          java -version
+      - name: Gerar pastas de plataforma (android/ios)
+        script: |
+          cd $FLUTTER_DIR
+          # `flutter create .` cria as pastas android/ e ios/ se faltarem,
+          # sem sobrescrever o que já existe em lib/, pubspec, etc.
+          flutter create --platforms=android,ios --project-name cnhhj_instrutor .
+      - name: Instalar dependências
+        script: |
+          cd $FLUTTER_DIR
+          flutter pub get
+      - name: Análise estática (não bloqueante)
+        script: |
+          cd $FLUTTER_DIR
+          flutter analyze || echo "⚠️ Análise reportou problemas — verificar depois"
+      - name: Compilar APK de debug
+        script: |
+          cd $FLUTTER_DIR
+          flutter build apk --debug
+    artifacts:
+      - instrutor_app/build/app/outputs/apk/debug/app-debug.apk
+      - instrutor_app/build/app/outputs/bundle/debug/app-debug.aab
+    publishing:
+      email:
+        recipients:
+          - cnh.ja0@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  # Workflow opcional — APK release (sem assinatura, para distribuição interna)
+  # Descomente quando estiver pronto para builds de produção.
+  # android-release-apk:
+  #   name: CNHhj Instrutor — Android Release APK (unsigned)
+  #   instance_type: linux_x2
+  #   max_build_duration: 60
+  #   environment:
+  #     flutter: stable
+  #   scripts:
+  #     - name: Gerar pastas de plataforma
+  #       script: |
+  #         cd instrutor_app
+  #         flutter create --platforms=android,ios --project-name cnhhj_instrutor .
+  #     - name: Instalar dependências
+  #       script: |
+  #         cd instrutor_app
+  #         flutter pub get
+  #     - name: Compilar release
+  #       script: |
+  #         cd instrutor_app
+  #         flutter build apk --release
+  #   artifacts:
+  #     - instrutor_app/build/app/outputs/apk/release/app-release.apk
+  #   publishing:
+  #     email:
+  #       recipients:
+  #         - cnh.ja0@gmail.com
