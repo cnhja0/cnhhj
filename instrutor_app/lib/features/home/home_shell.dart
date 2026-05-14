@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import 'home_state.dart';
@@ -11,8 +13,8 @@ import 'tabs/tab_schedule.dart';
 
 /// Casca do app pós-login: bottom nav **flutuante e animada** com 5 abas.
 ///
-/// Ordem: Home · Aula · Solicitações · Agenda · Mais
-/// (a aba Financeiro foi removida no MVP — sem pagamentos no app)
+/// Ordem: Home · Aula · Solicitações · Agenda · Mais.
+/// Ícones: Phosphor (linha quando inativo, fill quando ativo).
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key, this.initialTab = 0});
 
@@ -34,11 +36,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   }
 
   static const List<_TabInfo> _tabs = <_TabInfo>[
-    _TabInfo('Home',          Icons.home_outlined,              Icons.home_rounded),
-    _TabInfo('Aula',          Icons.school_outlined,            Icons.school_rounded),
-    _TabInfo('Solicitações',  Icons.notifications_none_rounded, Icons.notifications_rounded),
-    _TabInfo('Agenda',        Icons.calendar_today_outlined,    Icons.calendar_today_rounded),
-    _TabInfo('Mais',          Icons.more_horiz_rounded,         Icons.more_horiz_rounded),
+    _TabInfo('Home',         PhosphorIconsRegular.house,         PhosphorIconsFill.house),
+    _TabInfo('Aula',         PhosphorIconsRegular.steeringWheel, PhosphorIconsFill.steeringWheel),
+    _TabInfo('Solicitações', PhosphorIconsRegular.bellRinging,   PhosphorIconsFill.bellRinging),
+    _TabInfo('Agenda',       PhosphorIconsRegular.calendarDots,  PhosphorIconsFill.calendarDots),
+    _TabInfo('Mais',         PhosphorIconsRegular.dotsThree,     PhosphorIconsFill.dotsThree),
   ];
 
   @override
@@ -47,7 +49,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
     return Scaffold(
       backgroundColor: AppColors.primary,
-      body: IndexedStack(
+      body: _IndexedStackFade(
         index: index,
         children: const <Widget>[
           TabHome(),
@@ -66,7 +68,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             currentIndex: index,
             onTap: (int i) =>
                 ref.read(tabIndexProvider.notifier).state = i,
-          ),
+          )
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 400.ms)
+              .slideY(begin: 0.4, end: 0, curve: Curves.easeOutCubic),
         ),
       ),
     );
@@ -78,6 +83,43 @@ class _TabInfo {
   final String label;
   final IconData icon;
   final IconData selectedIcon;
+}
+
+/// Versão animada do IndexedStack: mantém todos os filhos vivos (estado
+/// preservado por aba) e usa AnimatedOpacity para suavizar a transição
+/// entre eles. TickerMode desliga animações dos filhos inativos por perf.
+class _IndexedStackFade extends StatelessWidget {
+  const _IndexedStackFade({
+    required this.index,
+    required this.children,
+    this.duration = const Duration(milliseconds: 220),
+  });
+
+  final int index;
+  final List<Widget> children;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: List<Widget>.generate(children.length, (int i) {
+        final bool active = i == index;
+        return IgnorePointer(
+          ignoring: !active,
+          child: AnimatedOpacity(
+            duration: duration,
+            curve: Curves.easeInOut,
+            opacity: active ? 1.0 : 0.0,
+            child: TickerMode(
+              enabled: active,
+              child: children[i],
+            ),
+          ),
+        );
+      }),
+    );
+  }
 }
 
 /// Barra de navegação flutuante preta com indicador circular amarelo
@@ -132,11 +174,11 @@ class _FloatingNavBar extends StatelessWidget {
                   AnimatedScale(
                     duration: const Duration(milliseconds: 320),
                     curve: Curves.easeOutCubic,
-                    scale: selected ? 1.15 : 1.0,
+                    scale: selected ? 1.12 : 1.0,
                     child: Icon(
                       selected ? tab.selectedIcon : tab.icon,
                       color: selected ? AppColors.textPrimary : Colors.white,
-                      size: 22,
+                      size: 24,
                       semanticLabel: tab.label,
                     ),
                   ),

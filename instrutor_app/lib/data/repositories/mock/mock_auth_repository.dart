@@ -1,14 +1,21 @@
 import 'dart:async';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../models/enums.dart';
 import '../../models/profile.dart';
 import '../auth_repository.dart';
 import '../repository_exception.dart';
 import '_seed.dart';
 
-/// Implementação em memória do AuthRepository, usada quando `APP_MODE=mock`.
+/// Implementação em memória do AuthRepository, com persistência da sessão
+/// via `SharedPreferences` — assim o usuário não precisa logar de novo
+/// depois de fechar e reabrir o app.
 class MockAuthRepository implements AuthRepository {
   MockAuthRepository();
+
+  static const String _prefsUserId = 'auth.userId';
+  static const String _prefsEmail = 'auth.email';
 
   AuthSession? _session;
   final StreamController<AuthSession?> _sessions =
@@ -19,6 +26,21 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Stream<AuthSession?> watchSession() => _sessions.stream;
+
+  @override
+  Future<void> restoreSession() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? userId = prefs.getString(_prefsUserId);
+      final String? email = prefs.getString(_prefsEmail);
+      if (userId != null && email != null) {
+        _session = AuthSession(userId: userId, email: email);
+        _sessions.add(_session);
+      }
+    } catch (_) {
+      // SharedPreferences indisponível — segue sem sessão restaurada.
+    }
+  }
 
   @override
   Future<Profile> currentProfile() async {
@@ -40,18 +62,20 @@ class MockAuthRepository implements AuthRepository {
     if (cred == null || cred.password != password) {
       throw const InvalidCredentialsException();
     }
-    return _emit(AuthSession(userId: cred.userId, email: email));
+    final AuthSession session =
+        AuthSession(userId: cred.userId, email: email);
+    return _emitAndPersist(session);
   }
 
   @override
   Future<AuthSession> signInWithGoogle() async {
     await _simulateNetwork();
-    // Mock simples: loga sempre como o instrutor seed.
-    final String email = 'instrutor@cnhhj.com.br';
-    return _emit(AuthSession(
+    const String email = 'instrutor@cnhhj.com.br';
+    final AuthSession session = AuthSession(
       userId: MockState.currentInstructorId,
       email: email,
-    ));
+    );
+    return _emitAndPersist(session);
   }
 
   @override
@@ -82,13 +106,13 @@ class MockAuthRepository implements AuthRepository {
       updatedAt: now,
     );
 
-    return _emit(AuthSession(userId: userId, email: email));
+    final AuthSession session = AuthSession(userId: userId, email: email);
+    return _emitAndPersist(session);
   }
 
   @override
   Future<void> sendPasswordReset(String email) async {
     await _simulateNetwork();
-    // No mock, apenas finge sucesso. Em produção dispara e-mail via Supabase.
   }
 
   @override
@@ -96,16 +120,32 @@ class MockAuthRepository implements AuthRepository {
     await _simulateNetwork(short: true);
     _session = null;
     _sessions.add(null);
+    await _persist();
   }
 
   // ─── helpers ──────────────────────────────────────────────────────
-  AuthSession _emit(AuthSession s) {
+  Future<AuthSession> _emitAndPersist(AuthSession s) async {
     _session = s;
     _sessions.add(s);
+    await _persist();
     return s;
   }
 
-  Future<void> _simulateNetwork({bool short = false}) => Future<void>.delayed(
-        Duration(milliseconds: short ? 200 : 700),
-      );
+  Future<void> _persist() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      if (_session != null) {
+        await prefs.setString(_prefsUserId, _session!.userId);
+        await prefs.setString(_prefsEmail, _session!.email);
+      } else {
+        await prefs.remove(_prefsUserId);
+        await prefs.remove(_prefsEmail);
+      }
+    } catch (_) {
+      // Sem prefs, sessão fica só em memória nesta execução.
+    }
+  }
+
+  Future<void> _simulateNetwork({bool short = false}) =>
+      Future<void>.delayed(Duration(milliseconds: short ? 200 : 700));
 }

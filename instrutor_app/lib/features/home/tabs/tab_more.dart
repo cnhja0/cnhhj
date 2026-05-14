@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../data/models/profile.dart';
 import '../../../data/providers.dart';
 import '../../../shared/widgets/widgets.dart';
 
-/// Aba MAIS — menu com Perfil, Guia, Suporte, Sair.
+/// Aba MAIS — menu com Perfil, Conversas, Avaliações, Guia, Suporte, Sair.
 class TabMore extends ConsumerWidget {
   const TabMore({super.key});
 
@@ -20,53 +23,62 @@ class TabMore extends ConsumerWidget {
       context.go(AppRoutes.login);
     }
 
+    final List<_MenuEntry> entries = <_MenuEntry>[
+      _MenuEntry(
+        icon: PhosphorIconsDuotone.userCircle,
+        label: 'Perfil',
+        onTap: () {
+          // TODO: navegar para edição de perfil
+        },
+      ),
+      _MenuEntry(
+        icon: PhosphorIconsDuotone.chatCircleDots,
+        label: 'Conversas',
+        onTap: () => context.push(AppRoutes.chatList),
+      ),
+      _MenuEntry(
+        icon: PhosphorIconsDuotone.star,
+        label: 'Avaliações recebidas',
+        onTap: () => context.push(AppRoutes.reviewsList),
+      ),
+      _MenuEntry(
+        icon: PhosphorIconsDuotone.steps,
+        label: 'Passo a passo',
+        onTap: () {},
+      ),
+      _MenuEntry(
+        icon: PhosphorIconsDuotone.bookOpen,
+        label: 'Guia',
+        onTap: () {},
+      ),
+      _MenuEntry(
+        icon: PhosphorIconsDuotone.headset,
+        label: 'Suporte',
+        onTap: () {},
+      ),
+    ];
+
     return CnhhjScaffold(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
       child: ListView(
+        physics: const BouncingScrollPhysics(),
         children: <Widget>[
-          const _UserHeader(),
+          const _UserHeader()
+              .animate()
+              .fadeIn(duration: 300.ms)
+              .slideY(begin: -0.1, end: 0, curve: Curves.easeOutCubic),
           const SizedBox(height: 16),
           CnhhjCard(
             padding: EdgeInsets.zero,
             child: Column(
               children: <Widget>[
-                _Item(
-                  icon: Icons.person_outline,
-                  label: 'Perfil',
-                  onTap: () {
-                    // TODO: navegar para edição de perfil
-                  },
-                ),
-                const Divider(height: 1),
-                _Item(
-                  icon: Icons.chat_bubble_outline,
-                  label: 'Conversas',
-                  onTap: () => context.push(AppRoutes.chatList),
-                ),
-                const Divider(height: 1),
-                _Item(
-                  icon: Icons.star_outline,
-                  label: 'Avaliações recebidas',
-                  onTap: () => context.push(AppRoutes.reviewsList),
-                ),
-                const Divider(height: 1),
-                _Item(
-                  icon: Icons.menu_book_outlined,
-                  label: 'Passo a passo',
-                  onTap: () {},
-                ),
-                const Divider(height: 1),
-                _Item(
-                  icon: Icons.help_outline,
-                  label: 'Guia',
-                  onTap: () {},
-                ),
-                const Divider(height: 1),
-                _Item(
-                  icon: Icons.support_agent_outlined,
-                  label: 'Suporte',
-                  onTap: () {},
-                ),
+                for (int i = 0; i < entries.length; i++) ...<Widget>[
+                  if (i > 0)
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                  _Item(entry: entries[i])
+                      .animate()
+                      .fadeIn(delay: (150 + i * 50).ms, duration: 300.ms),
+                ],
               ],
             ),
           ),
@@ -74,12 +86,16 @@ class TabMore extends ConsumerWidget {
           CnhhjCard(
             padding: EdgeInsets.zero,
             child: _Item(
-              icon: Icons.logout,
-              label: 'Sair',
-              destructive: true,
-              onTap: logout,
+              entry: _MenuEntry(
+                icon: PhosphorIconsDuotone.signOut,
+                label: 'Sair',
+                onTap: logout,
+                destructive: true,
+              ),
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(delay: 500.ms, duration: 300.ms),
           const SizedBox(height: 24),
           Center(
             child: Text(
@@ -87,6 +103,7 @@ class TabMore extends ConsumerWidget {
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 color: AppColors.textMuted,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -96,51 +113,8 @@ class TabMore extends ConsumerWidget {
   }
 }
 
-class _UserHeader extends ConsumerWidget {
-  const _UserHeader();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<dynamic>(
-      future: ref.read(authRepositoryProvider).currentProfile(),
-      builder: (BuildContext ctx, AsyncSnapshot<dynamic> snap) {
-        final String name = snap.data?.fullName ?? 'Instrutor';
-        return CnhhjCard(
-          child: Row(
-            children: <Widget>[
-              CnhhjAvatar(size: 56, fullName: name),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Instrutor de aulas práticas',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _Item extends StatelessWidget {
-  const _Item({
+class _MenuEntry {
+  const _MenuEntry({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -151,23 +125,114 @@ class _Item extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final bool destructive;
+}
+
+class _UserHeader extends ConsumerWidget {
+  const _UserHeader();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<Profile>(
+      future: ref.read(authRepositoryProvider).currentProfile(),
+      builder: (BuildContext ctx, AsyncSnapshot<Profile> snap) {
+        final String name = snap.data?.fullName ?? 'Instrutor';
+        return CnhhjCard(
+          child: Row(
+            children: <Widget>[
+              CnhhjAvatar(size: 60, fullName: name),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      name,
+                      style: GoogleFonts.poppins(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: <Widget>[
+                        const Icon(
+                          PhosphorIconsFill.steeringWheel,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Instrutor de aulas práticas',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                PhosphorIconsRegular.caretRight,
+                size: 18,
+                color: AppColors.textMuted,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Item extends StatelessWidget {
+  const _Item({required this.entry});
+  final _MenuEntry entry;
 
   @override
   Widget build(BuildContext context) {
     final Color color =
-        destructive ? AppColors.error : AppColors.textPrimary;
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: color),
-      title: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: color,
+        entry.destructive ? AppColors.error : AppColors.textPrimary;
+    return InkWell(
+      onTap: entry.onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: entry.destructive
+                    ? AppColors.error.withOpacity(0.1)
+                    : AppColors.primaryLight,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(entry.icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                entry.label,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ),
+            Icon(
+              PhosphorIconsRegular.caretRight,
+              color: AppColors.textMuted,
+              size: 18,
+            ),
+          ],
         ),
       ),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
     );
   }
 }

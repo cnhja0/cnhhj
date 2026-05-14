@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-/// Botão primário do CNHhj: fundo preto, texto branco, cantos arredondados.
-/// É o CTA padrão das telas (login, próximo, salvar, enviar).
-class CnhhjPrimaryButton extends StatelessWidget {
+/// Botão primário do CNHhj: fundo preto, texto branco, cantos arredondados,
+/// **feedback de scale-on-press** para sensação tátil.
+///
+/// É o CTA padrão (Entrar, Salvar, Próximo, Confirmar).
+class CnhhjPrimaryButton extends StatefulWidget {
   const CnhhjPrimaryButton({
     super.key,
     required this.label,
@@ -21,8 +23,17 @@ class CnhhjPrimaryButton extends StatelessWidget {
   final bool expanded;
 
   @override
+  State<CnhhjPrimaryButton> createState() => _CnhhjPrimaryButtonState();
+}
+
+class _CnhhjPrimaryButtonState extends State<CnhhjPrimaryButton> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    final Widget child = isLoading
+    final bool disabled = widget.isLoading || widget.onPressed == null;
+
+    final Widget child = widget.isLoading
         ? const SizedBox(
             height: 20,
             width: 20,
@@ -35,11 +46,11 @@ class CnhhjPrimaryButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              if (icon != null) ...<Widget>[
-                Icon(icon, size: 18),
+              if (widget.icon != null) ...<Widget>[
+                Icon(widget.icon, size: 18),
                 const SizedBox(width: 8),
               ],
-              Text(label),
+              Text(widget.label),
             ],
           );
 
@@ -48,18 +59,31 @@ class CnhhjPrimaryButton extends StatelessWidget {
       foregroundColor: AppColors.surface,
       disabledBackgroundColor: AppColors.disabled,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      minimumSize: widget.expanded ? const Size.fromHeight(52) : null,
+      elevation: 0,
+    );
+
+    final Widget button = AnimatedScale(
+      duration: const Duration(milliseconds: 110),
+      curve: Curves.easeOut,
+      scale: _pressed ? 0.96 : 1.0,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: disabled ? null : (_) => setState(() => _pressed = true),
+        onPointerUp: disabled ? null : (_) => setState(() => _pressed = false),
+        onPointerCancel:
+            disabled ? null : (_) => setState(() => _pressed = false),
+        child: ElevatedButton(
+          onPressed: widget.isLoading ? null : widget.onPressed,
+          style: style,
+          child: child,
+        ),
       ),
-      minimumSize: expanded ? const Size.fromHeight(52) : null,
     );
 
-    final Widget button = ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: style,
-      child: child,
-    );
-
-    return expanded ? SizedBox(width: double.infinity, child: button) : button;
+    return widget.expanded
+        ? SizedBox(width: double.infinity, child: button)
+        : button;
   }
 }

@@ -5,14 +5,12 @@ import 'app_colors.dart';
 
 /// Tema Material 3 do CNHhj.
 ///
-/// Centraliza a aparência do app: cores, tipografia (Poppins via Google Fonts),
-/// formatos de botões, inputs e cards.
+/// Tipografia mais expressiva: títulos com peso 900 (extra-bold), tamanhos
+/// maiores em telas-chave (Home, AppBar). Mantém Poppins como família.
 class AppTheme {
   AppTheme._();
 
   static ThemeData light() {
-    final TextTheme baseText = GoogleFonts.poppinsTextTheme();
-
     final ColorScheme scheme = ColorScheme(
       brightness: Brightness.light,
       primary: AppColors.primary,
@@ -25,23 +23,94 @@ class AppTheme {
       onSurface: AppColors.textPrimary,
     );
 
+    // Tipografia customizada — pesos mais ousados em headlines, bom
+    // espaçamento de letras, hierarquia clara.
+    final TextTheme textTheme = TextTheme(
+      displayLarge: GoogleFonts.poppins(
+        fontSize: 36,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -1,
+        color: AppColors.textPrimary,
+        height: 1.05,
+      ),
+      displayMedium: GoogleFonts.poppins(
+        fontSize: 28,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.5,
+        color: AppColors.textPrimary,
+        height: 1.1,
+      ),
+      displaySmall: GoogleFonts.poppins(
+        fontSize: 22,
+        fontWeight: FontWeight.w900,
+        color: AppColors.textPrimary,
+      ),
+      headlineLarge: GoogleFonts.poppins(
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
+        color: AppColors.textPrimary,
+      ),
+      headlineMedium: GoogleFonts.poppins(
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        color: AppColors.textPrimary,
+      ),
+      headlineSmall: GoogleFonts.poppins(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+      ),
+      titleLarge: GoogleFonts.poppins(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+      ),
+      titleMedium: GoogleFonts.poppins(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      ),
+      bodyLarge: GoogleFonts.poppins(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textPrimary,
+        height: 1.5,
+      ),
+      bodyMedium: GoogleFonts.poppins(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textSecondary,
+        height: 1.5,
+      ),
+      labelLarge: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+        letterSpacing: 0.5,
+      ),
+      labelMedium: GoogleFonts.poppins(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textMuted,
+        letterSpacing: 0.5,
+      ),
+    );
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: AppColors.primary,
-      textTheme: baseText.apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-      ),
+      textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         titleTextStyle: GoogleFonts.poppins(
           color: AppColors.textPrimary,
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.3,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -85,7 +154,8 @@ class AppTheme {
           ),
           textStyle: GoogleFonts.poppins(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
           ),
         ),
       ),
@@ -99,7 +169,7 @@ class AppTheme {
           ),
           textStyle: GoogleFonts.poppins(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -117,7 +187,7 @@ class AppTheme {
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
         margin: EdgeInsets.zero,
       ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/booking.dart';
@@ -18,33 +20,57 @@ class TabRequests extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String userId = ref.read(authRepositoryProvider).currentSession?.userId ??
-        MockState.currentInstructorId;
-    final AsyncValue<List<Booking>> async = ref.watch(_pendingBookingsProvider(userId));
+    final String userId =
+        ref.read(authRepositoryProvider).currentSession?.userId ??
+            MockState.currentInstructorId;
+    final AsyncValue<List<Booking>> async =
+        ref.watch(_pendingBookingsProvider(userId));
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: async.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.textPrimary),
-        ),
-        error: (Object err, _) => Center(
-          child: Text('Erro: $err'),
-        ),
-        data: (List<Booking> items) {
-          if (items.isEmpty) {
-            return const CnhhjEmptyState(
-              icon: Icons.notifications_none,
-              message: 'Nenhuma solicitação pendente.\nQuando alunos pedirem aulas, elas aparecem aqui.',
-            );
-          }
-          return ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (BuildContext ctx, int i) =>
-                _RequestCard(booking: items[i]),
-          );
-        },
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          _ScreenHeader(
+            title: 'Solicitações',
+            subtitle: async.value == null
+                ? null
+                : '${async.value!.length} ${async.value!.length == 1 ? 'pendente' : 'pendentes'}',
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: async.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.textPrimary),
+              ),
+              error: (Object err, _) => Center(child: Text('Erro: $err')),
+              data: (List<Booking> items) {
+                if (items.isEmpty) {
+                  return const CnhhjEmptyState(
+                    icon: PhosphorIconsDuotone.bellSlash,
+                    message:
+                        'Nenhuma solicitação pendente.\nQuando alunos pedirem aulas, elas aparecem aqui.',
+                  );
+                }
+                return ListView.separated(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (BuildContext ctx, int i) {
+                    return _RequestCard(booking: items[i])
+                        .animate()
+                        .fadeIn(delay: (i * 80).ms, duration: 350.ms)
+                        .slideY(
+                          begin: 0.1,
+                          end: 0,
+                          curve: Curves.easeOutCubic,
+                        );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -57,6 +83,42 @@ final FutureProviderFamily<List<Booking>, String> _pendingBookingsProvider =
       .listByStatus(userId, BookingStatus.pending);
 });
 
+class _ScreenHeader extends StatelessWidget {
+  const _ScreenHeader({required this.title, this.subtitle});
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textPrimary,
+            height: 1.1,
+            letterSpacing: -0.5,
+          ),
+        ),
+        if (subtitle != null) ...<Widget>[
+          const SizedBox(height: 2),
+          Text(
+            subtitle!,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _RequestCard extends ConsumerWidget {
   const _RequestCard({required this.booking});
   final Booking booking;
@@ -64,7 +126,7 @@ class _RequestCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final Profile? student = MockState.instance.profiles[booking.studentId];
-    final DateFormat df = DateFormat('EEE, dd/MM HH:mm', 'pt_BR');
+    final DateFormat df = DateFormat('EEE, dd/MM \'às\' HH:mm', 'pt_BR');
 
     Future<void> respond(BookingStatus status) async {
       await ref.read(bookingRepositoryProvider).updateStatus(
@@ -74,7 +136,6 @@ class _RequestCard extends ConsumerWidget {
                 ? booking.instructorId
                 : null,
           );
-      // Invalida o provider para refrescar a lista.
       ref.invalidate(_pendingBookingsProvider);
       if (!context.mounted) return;
       CnhhjSnack.success(
@@ -91,7 +152,7 @@ class _RequestCard extends ConsumerWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              CnhhjAvatar(size: 44, fullName: student?.fullName),
+              CnhhjAvatar(size: 48, fullName: student?.fullName),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -100,61 +161,101 @@ class _RequestCard extends ConsumerWidget {
                     Text(
                       student?.fullName ?? 'Aluno',
                       style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    Text(
-                      df.format(booking.scheduledStart),
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: <Widget>[
+                        const Icon(
+                          PhosphorIconsRegular.clock,
+                          size: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          df.format(booking.scheduledStart),
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               if (booking.agreedPrice != null)
-                Text(
-                  'R\$ ${booking.agreedPrice!.toStringAsFixed(2)}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'R\$ ${booking.agreedPrice!.toStringAsFixed(0)}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
             ],
           ),
           if (booking.meetingPoint != null) ...<Widget>[
-            const SizedBox(height: 8),
-            Row(
-              children: <Widget>[
-                const Icon(Icons.place_outlined, size: 16, color: AppColors.textMuted),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    booking.meetingPoint!,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceOverlay,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    PhosphorIconsDuotone.mapPin,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      booking.meetingPoint!,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Row(
             children: <Widget>[
               Expanded(
                 child: CnhhjSecondaryButton(
                   label: 'Recusar',
+                  icon: PhosphorIconsRegular.x,
                   onPressed: () => respond(BookingStatus.cancelled),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: CnhhjPrimaryButton(
                   label: 'Aceitar',
+                  icon: PhosphorIconsRegular.check,
                   onPressed: () => respond(BookingStatus.confirmed),
                 ),
               ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
@@ -71,12 +73,21 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       child: CnhhjScaffold(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Form(
             key: _formKey,
             child: Column(
               children: <Widget>[
                 const SizedBox(height: 24),
-                const CnhhjLogo(size: 72),
+                const CnhhjLogo(size: 72)
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .scaleXY(
+                      begin: 0.9,
+                      end: 1.0,
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack,
+                    ),
                 const SizedBox(height: 24),
                 CnhhjCard(
                   child: Column(
@@ -86,9 +97,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         'Crie sua conta',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
                           color: AppColors.textPrimary,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -98,13 +110,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 16),
                       CnhhjTextField(
                         controller: _nameController,
                         hint: 'Nome completo',
-                        icon: Icons.person_outline,
+                        icon: PhosphorIconsRegular.user,
                         textInputAction: TextInputAction.next,
                         validator: (String? v) =>
                             (v == null || v.trim().length < 3)
@@ -115,7 +128,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       CnhhjTextField(
                         controller: _emailController,
                         hint: 'Digite seu email',
-                        icon: Icons.mail_outline,
+                        icon: PhosphorIconsRegular.envelope,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         validator: (String? v) {
@@ -170,11 +183,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       const SizedBox(height: 16),
                       CnhhjPrimaryButton(
                         label: 'Criar conta',
+                        icon: PhosphorIconsRegular.userPlus,
                         onPressed: _submit,
                       ),
                     ],
                   ),
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 200.ms, duration: 400.ms)
+                    .slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -184,6 +201,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     CnhhjTextLink(
@@ -192,7 +210,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       onPressed: () => context.go(AppRoutes.login),
                     ),
                   ],
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 450.ms, duration: 300.ms),
                 const SizedBox(height: 12),
               ],
             ),

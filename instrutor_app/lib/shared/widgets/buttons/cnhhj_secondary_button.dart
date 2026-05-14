@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-/// Botão secundário: outline preto sobre fundo amarelo. Usado quando há
-/// uma ação primária e queremos oferecer alternativa visualmente distinta
-/// (ex: "Anterior" ao lado de "Próximo", "Cancelar" ao lado de "Confirmar").
-class CnhhjSecondaryButton extends StatelessWidget {
+/// Botão secundário: outline preto sobre fundo amarelo, com scale-on-press.
+class CnhhjSecondaryButton extends StatefulWidget {
   const CnhhjSecondaryButton({
     super.key,
     required this.label,
@@ -20,16 +18,25 @@ class CnhhjSecondaryButton extends StatelessWidget {
   final bool expanded;
 
   @override
+  State<CnhhjSecondaryButton> createState() => _CnhhjSecondaryButtonState();
+}
+
+class _CnhhjSecondaryButtonState extends State<CnhhjSecondaryButton> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final bool disabled = widget.onPressed == null;
+
     final Widget child = Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        if (icon != null) ...<Widget>[
-          Icon(icon, size: 18),
+        if (widget.icon != null) ...<Widget>[
+          Icon(widget.icon, size: 18),
           const SizedBox(width: 8),
         ],
-        Text(label),
+        Text(widget.label),
       ],
     );
 
@@ -37,18 +44,30 @@ class CnhhjSecondaryButton extends StatelessWidget {
       foregroundColor: AppColors.textPrimary,
       side: const BorderSide(color: AppColors.textPrimary, width: 1.5),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      minimumSize: widget.expanded ? const Size.fromHeight(52) : null,
+    );
+
+    final Widget button = AnimatedScale(
+      duration: const Duration(milliseconds: 110),
+      curve: Curves.easeOut,
+      scale: _pressed ? 0.96 : 1.0,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: disabled ? null : (_) => setState(() => _pressed = true),
+        onPointerUp: disabled ? null : (_) => setState(() => _pressed = false),
+        onPointerCancel:
+            disabled ? null : (_) => setState(() => _pressed = false),
+        child: OutlinedButton(
+          onPressed: widget.onPressed,
+          style: style,
+          child: child,
+        ),
       ),
-      minimumSize: expanded ? const Size.fromHeight(52) : null,
     );
 
-    final Widget button = OutlinedButton(
-      onPressed: onPressed,
-      style: style,
-      child: child,
-    );
-
-    return expanded ? SizedBox(width: double.infinity, child: button) : button;
+    return widget.expanded
+        ? SizedBox(width: double.infinity, child: button)
+        : button;
   }
 }

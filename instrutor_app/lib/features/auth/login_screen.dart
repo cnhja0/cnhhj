@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
@@ -37,7 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
     if (!mounted) return;
     if (ok) {
-      context.go(AppRoutes.lesson);
+      context.go(AppRoutes.home);
     } else {
       final String? err = ref.read(loginControllerProvider).errorMessage;
       if (err != null) CnhhjSnack.error(context, err);
@@ -49,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref.read(loginControllerProvider.notifier).signInWithGoogle();
     if (!mounted) return;
     if (ok) {
-      context.go(AppRoutes.lesson);
+      context.go(AppRoutes.home);
     } else {
       final String? err = ref.read(loginControllerProvider).errorMessage;
       if (err != null) CnhhjSnack.error(context, err);
@@ -66,14 +68,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: CnhhjScaffold(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Form(
             key: _formKey,
             child: Column(
               children: <Widget>[
                 const SizedBox(height: 24),
-                const CnhhjLogo(size: 72),
-                const SizedBox(height: 16),
-                const _PromoBanner(),
+                const CnhhjLogo(size: 72)
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .scaleXY(
+                      begin: 0.9,
+                      end: 1.0,
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack,
+                    ),
+                const SizedBox(height: 18),
+                const _PromoBanner()
+                    .animate()
+                    .fadeIn(delay: 150.ms, duration: 400.ms)
+                    .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 20),
                 CnhhjCard(
                   child: Column(
@@ -83,9 +97,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'Faça o login na sua conta',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -94,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       CnhhjTextField(
                         controller: _emailController,
                         hint: 'Digite seu email',
-                        icon: Icons.mail_outline,
+                        icon: PhosphorIconsRegular.envelope,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         validator: (String? v) {
@@ -135,6 +150,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 16),
                       CnhhjPrimaryButton(
                         label: 'Entrar',
+                        icon: PhosphorIconsRegular.signIn,
                         onPressed: _submit,
                       ),
                       const SizedBox(height: 12),
@@ -149,7 +165,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ],
                   ),
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 300.ms, duration: 400.ms)
+                    .slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -159,6 +178,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     CnhhjTextLink(
@@ -167,7 +187,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: () => context.go(AppRoutes.signUp),
                     ),
                   ],
-                ),
+                )
+                    .animate()
+                    .fadeIn(delay: 500.ms, duration: 300.ms),
                 const SizedBox(height: 12),
               ],
             ),
@@ -178,9 +200,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-/// Placeholder do banner promocional do topo (no Figma é uma imagem
-/// "SUA CNH COMEÇA AQUI! AULAS COMPLETAS"). Quando você fornecer o asset
-/// real, substituímos este widget por `Image.asset('assets/images/promo_banner.png')`.
+/// Banner promocional do topo do login.
+/// Quando você fornecer o asset real, substituímos por `Image.asset(...)`.
 class _PromoBanner extends StatelessWidget {
   const _PromoBanner();
 
@@ -188,12 +209,23 @@ class _PromoBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 140,
+      height: 150,
       decoration: BoxDecoration(
-        color: AppColors.textPrimary,
-        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[Color(0xFF1a1a1a), Color(0xFF000000)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       child: Row(
         children: <Widget>[
           Expanded(
@@ -204,46 +236,52 @@ class _PromoBanner extends StatelessWidget {
                 Text(
                   'SUA CNH COMEÇA',
                   style: GoogleFonts.poppins(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppColors.surface,
-                    letterSpacing: 0.5,
+                    letterSpacing: 1,
                   ),
                 ),
                 Text(
                   'AQUI!',
                   style: GoogleFonts.poppins(
-                    fontSize: 26,
+                    fontSize: 32,
                     fontWeight: FontWeight.w900,
                     color: AppColors.primary,
                     height: 1,
+                    letterSpacing: -1,
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  'Aulas completas',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: AppColors.surface,
-                  ),
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      PhosphorIconsFill.check,
+                      size: 12,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Aulas completas com instrutores credenciados',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        color: AppColors.surface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.primary,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Text(
-              'CNHhj',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            child: const CnhhjLogo(size: 32, iconOnly: true),
           ),
         ],
       ),
