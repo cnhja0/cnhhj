@@ -33,7 +33,8 @@ class _TabScheduleState extends ConsumerState<TabSchedule> {
         ref.watch(_confirmedProvider(userId));
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      // Padding bottom alto para o conteúdo não ficar atrás da bottom nav.
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
       child: async.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.textPrimary),

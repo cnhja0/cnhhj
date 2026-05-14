@@ -90,8 +90,8 @@ class _TabLessonState extends ConsumerState<TabLesson> {
     }
     final double? price =
         double.tryParse(_priceController.text.replaceAll(',', '.'));
-    if (price == null || price < 50) {
-      CnhhjSnack.error(context, 'Valor mínimo de R\$ 50,00 por aula.');
+    if (price == null || price <= 0) {
+      CnhhjSnack.error(context, 'Informe um valor válido.');
       return;
     }
     if (_selectedDays.isEmpty) {
@@ -139,7 +139,9 @@ class _TabLessonState extends ConsumerState<TabLesson> {
       show: _saving,
       message: 'Salvando...',
       child: CnhhjScaffold(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        // Padding bottom alto para o conteúdo não ficar atrás da
+        // bottom nav flutuante (~84px de nav + buffer).
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -208,14 +210,6 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                         decimal: true,
                       ),
                       icon: Icons.attach_money,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Mínimo R\$ 50,00',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: AppColors.textMuted,
-                      ),
                     ),
                   ],
                 ),

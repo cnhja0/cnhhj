@@ -42,7 +42,7 @@ class TabHome extends ConsumerWidget {
     final List<_QuickAction> actions = <_QuickAction>[
       _QuickAction(
         icon: PhosphorIconsDuotone.steeringWheel,
-        label: 'Configurar\nAula',
+        label: 'Configurar aula',
         onTap: () => ref.read(tabIndexProvider.notifier).state = 1,
       ),
       _QuickAction(
@@ -116,7 +116,9 @@ class TabHome extends ConsumerWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 1.0,
+              // Cards mais "horizontais" (1.25 = wider than tall) pra
+              // 3 fileiras caberem na tela acima do bottom nav flutuante.
+              childAspectRatio: 1.25,
               children: <Widget>[
                 for (int i = 0; i < actions.length; i++)
                   _HomeCard(action: actions[i])
@@ -346,7 +348,7 @@ class _HomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CnhhjCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       onTap: action.onTap,
       child: Stack(
         clipBehavior: Clip.none,
@@ -356,8 +358,8 @@ class _HomeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Container(
-                width: 46,
-                height: 46,
+                width: 42,
+                height: 42,
                 decoration: const BoxDecoration(
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
@@ -365,17 +367,20 @@ class _HomeCard extends StatelessWidget {
                 child: Icon(
                   action.icon,
                   color: AppColors.textPrimary,
-                  size: 24,
+                  size: 22,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
                     action.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                       height: 1.2,
@@ -386,6 +391,8 @@ class _HomeCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       action.subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: AppColors.textSecondary,
