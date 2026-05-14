@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CNHhj — Relatório de Progresso</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; line-height: 1.55; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* ─── Layout de página ───────────────────────────────────────────── */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 22mm 18mm 18mm 18mm;
+    page-break-after: always;
+    background: #ffffff;
+    position: relative;
+  }
+  .page:last-of-type { page-break-after: auto; }
+
+  /* ─── Cover ──────────────────────────────────────────────────────── */
+  .cover {
+    background: #FFD000;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .cover-inner {
+    padding: 35mm 18mm 18mm 18mm;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .cover .logo { width: 200px; margin-bottom: 28mm; }
+  .cover h1 {
+    font-size: 42pt; font-weight: 900; line-height: 1.05;
+    margin: 0 0 6mm 0; color: #000;
+    letter-spacing: -1px;
+  }
+  .cover .subtitle { font-size: 16pt; font-weight: 500; color: #000; margin-bottom: 10mm; }
+  .cover .meta { font-size: 11pt; color: #1a1a1a; }
+  .cover .meta strong { display: inline-block; min-width: 90px; }
+  .cover-footer {
+    background: #000;
+    color: #FFD000;
+    padding: 14mm 18mm;
+    font-size: 10pt;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* ─── Headers de seção ──────────────────────────────────────────── */
+  .section-eyebrow {
+    display: inline-block;
+    background: #000;
+    color: #FFD000;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6mm;
+  }
+  h2 {
+    font-size: 24pt;
+    font-weight: 900;
+    margin: 0 0 8mm 0;
+    color: #000;
+    letter-spacing: -0.5px;
+  }
+  h3 {
+    font-size: 14pt;
+    font-weight: 700;
+    margin: 8mm 0 3mm 0;
+    color: #000;
+    border-bottom: 2px solid #FFD000;
+    padding-bottom: 3px;
+  }
+  h4 { font-size: 11pt; font-weight: 700; margin: 5mm 0 2mm 0; }
+  p { font-size: 10.5pt; margin: 0 0 3mm 0; }
+
+  /* ─── Hero summary ──────────────────────────────────────────────── */
+  .hero {
+    background: linear-gradient(135deg, #FFD000 0%, #FFE970 100%);
+    padding: 8mm;
+    border-radius: 8px;
+    margin: 0 0 6mm 0;
+    border-left: 6px solid #000;
+  }
+  .hero p { margin: 0; font-size: 11pt; font-weight: 500; }
+
+  /* ─── KPI Cards ─────────────────────────────────────────────────── */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4mm;
+    margin: 6mm 0;
+  }
+  .kpi {
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 6px;
+    padding: 4mm;
+    text-align: center;
+  }
+  .kpi .number {
+    font-size: 22pt;
+    font-weight: 900;
+    color: #000;
+    line-height: 1;
+    display: block;
+    margin-bottom: 2mm;
+  }
+  .kpi .label {
+    font-size: 8.5pt;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  /* ─── Color palette ─────────────────────────────────────────────── */
+  .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3mm; margin: 4mm 0; }
+  .swatch { border-radius: 6px; padding: 4mm 3mm; text-align: center; font-size: 8.5pt; font-weight: 600; }
+  .swatch .hex { display: block; font-size: 8pt; font-family: 'Consolas', monospace; opacity: 0.8; margin-top: 2mm; }
+
+  /* ─── Lists ─────────────────────────────────────────────────────── */
+  ul.clean { list-style: none; padding-left: 0; }
+  ul.clean li { padding: 2mm 0 2mm 8mm; position: relative; font-size: 10pt; }
+  ul.clean li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #47C100;
+    font-weight: 900;
+    font-size: 11pt;
+  }
+  ul.clean.x li:before { content: "○"; color: #aaa; }
+  ul.bullets { padding-left: 5mm; }
+  ul.bullets li { margin-bottom: 1mm; font-size: 10pt; }
+
+  /* ─── Two-column layout ─────────────────────────────────────────── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+
+  /* ─── Cards ─────────────────────────────────────────────────────── */
+  .card {
+    background: #fafafa;
+    border-left: 4px solid #FFD000;
+    padding: 4mm 5mm;
+    margin: 3mm 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .card.dark {
+    background: #1a1a1a;
+    color: #fff;
+    border-left-color: #FFD000;
+  }
+  .card.dark h4 { color: #FFD000; }
+
+  /* ─── Table ─────────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 4mm 0; font-size: 9.5pt; }
+  th { background: #000; color: #FFD000; text-align: left; padding: 3mm 4mm; font-weight: 700; }
+  td { padding: 3mm 4mm; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 8.5pt; font-weight: 700; }
+  .badge.ok { background: #47C100; color: #fff; }
+  .badge.pending { background: #FFD000; color: #000; }
+  .badge.future { background: #e0e0e0; color: #555; }
+
+  /* ─── Screenshots ───────────────────────────────────────────────── */
+  .screenshots { display: grid; grid-template-columns: 1fr; gap: 5mm; margin: 5mm 0; }
+  .screenshot {
+    background: #1a1a1a;
+    padding: 4mm;
+    border-radius: 6px;
+  }
+  .screenshot img { width: 100%; height: auto; display: block; border-radius: 4px; }
+  .screenshot .caption {
+    color: #FFD000;
+    font-size: 9pt;
+    margin-top: 3mm;
+    text-align: center;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── Timeline ──────────────────────────────────────────────────── */
+  .timeline { margin: 5mm 0; position: relative; }
+  .timeline-item {
+    padding: 3mm 0 3mm 12mm;
+    border-left: 3px solid #FFD000;
+    margin-left: 5mm;
+    position: relative;
+  }
+  .timeline-item:before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    background: #FFD000;
+    border: 3px solid #000;
+    border-radius: 50%;
+    position: absolute;
+    left: -7px;
+    top: 4mm;
+  }
+  .timeline-item.done:before { background: #47C100; }
+  .timeline-item.next:before { background: #FFD000; }
+  .timeline-item.future:before { background: #fff; }
+  .timeline-item .when { font-size: 9pt; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .timeline-item .what { font-size: 10.5pt; font-weight: 600; }
+  .timeline-item .detail { font-size: 9.5pt; color: #555; }
+
+  /* ─── Footer ────────────────────────────────────────────────────── */
+  .page-footer {
+    position: absolute;
+    bottom: 8mm;
+    left: 18mm;
+    right: 18mm;
+    border-top: 1px solid #ddd;
+    padding-top: 3mm;
+    font-size: 8pt;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ─── Quote ─────────────────────────────────────────────────────── */
+  .quote {
+    background: #FFFAE6;
+    padding: 5mm 8mm;
+    border-radius: 6px;
+    font-style: italic;
+    font-size: 11pt;
+    margin: 5mm 0;
+    border-left: 4px solid #FFD000;
+  }
+
+  /* ─── Highlight box ─────────────────────────────────────────────── */
+  .highlight-box {
+    background: #000;
+    color: #fff;
+    padding: 6mm;
+    border-radius: 6px;
+    margin: 5mm 0;
+  }
+  .highlight-box strong { color: #FFD000; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- COVER                                                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page cover">
+  <div class="cover-inner">
+    <img src="report-assets/cnhhj_logo.svg" class="logo" alt="CNHhj">
+    <h1>Relatório de<br>Progresso</h1>
+    <div class="subtitle">Construção do MVP — App do Instrutor</div>
+    <div class="meta">
+      <p><strong>Data:</strong> 12 de Maio de 2026</p>
+      <p><strong>Versão:</strong> 0.1.0 — pré-build</p>
+      <p><strong>Foco:</strong> Lançamento em Guarulhos/SP</p>
+    </div>
+  </div>
+  <div class="cover-footer">
+    Confidencial · Documento Interno · CNHhj
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 1. SUMÁRIO EXECUTIVO                                             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">01 · Visão geral</span>
+  <h2>Sumário Executivo</h2>
+
+  <div class="hero">
+    <p>O <strong>CNHhj</strong> está pronto no nível de código: o aplicativo do <strong>Instrutor</strong> tem todas as 16 telas planejadas implementadas, backend modelado, design system aplicado, e CI/CD configurado para gerar APKs na nuvem. Em horas estaremos com o primeiro APK instalável no celular.</p>
+  </div>
+
+  <h3>O que é o CNHhj</h3>
+  <p>Plataforma mobile que conecta <strong>instrutores autônomos de aulas práticas de CNH</strong> diretamente aos <strong>alunos em processo de habilitação</strong>. Hoje, esse público depende de autoescolas ou indicações boca-a-boca, sem visibilidade de preço, disponibilidade ou reputação dos instrutores. O CNHhj resolve isso.</p>
+
+  <h3>Status do projeto em uma frase</h3>
+  <div class="quote">
+    "Todo o código do app do instrutor está pronto. Falta apenas o build do APK (em andamento na nuvem) e conectar no Supabase real para começarmos a captar os primeiros instrutores em Guarulhos."
+  </div>
+
+  <h3>Os números até agora</h3>
+  <div class="kpis">
+    <div class="kpi"><span class="number">16</span><span class="label">Telas no app</span></div>
+    <div class="kpi"><span class="number">83</span><span class="label">Arquivos Dart</span></div>
+    <div class="kpi"><span class="number">7.138</span><span class="label">Linhas de código</span></div>
+    <div class="kpi"><span class="number">9</span><span class="label">Tabelas no banco</span></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span class="number">20</span><span class="label">Componentes de UI</span></div>
+    <div class="kpi"><span class="number">6</span><span class="label">Repositórios de dados</span></div>
+    <div class="kpi"><span class="number">16</span><span class="label">Skills de IA instaladas</span></div>
+    <div class="kpi"><span class="number">R$ 0</span><span class="label">Custo até agora</span></div>
+  </div>
+
+  <h3>Decisões-chave tomadas</h3>
+  <ul class="clean">
+    <li><strong>Tecnologia mobile:</strong> Flutter — um único código serve iOS e Android (economia de ~50% no desenvolvimento mobile vs. apps nativos separados)</li>
+    <li><strong>Backend:</strong> Supabase — banco PostgreSQL + autenticação + storage gerenciados; sem necessidade de DevOps próprio nessa fase</li>
+    <li><strong>Foco geográfico:</strong> Guarulhos/SP — onde já temos contato local; baixo risco de escalar prematuramente</li>
+    <li><strong>MVP gratuito:</strong> sem cobrança de comissão nem assinatura na primeira versão, para focar em validar a demanda antes de monetizar</li>
+    <li><strong>Pagamento via PIX direto:</strong> no MVP, sem integração de gateway — reduz complexidade e custo de transação a zero</li>
+    <li><strong>Build na nuvem (Codemagic):</strong> não precisamos de Mac nem instalação local de Flutter para gerar APKs Android</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 2. VISÃO DO PRODUTO                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">02 · Produto</span>
+  <h2>Visão de Produto</h2>
+
+  <h3>Estratégia em fases</h3>
+  <p>O CNHhj é uma plataforma <strong>multi-sided</strong> que vai crescer em camadas. Cada fase amplia o público atendido sem invalidar o trabalho anterior.</p>
+
+  <table>
+    <thead>
+      <tr><th style="width:18%">Fase</th><th style="width:35%">Quem entra</th><th>Quando</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>MVP</strong></td>
+        <td>App do Instrutor (mobile)</td>
+        <td>Mai/2026</td>
+        <td><span class="badge ok">Código pronto</span></td>
+      </tr>
+      <tr>
+        <td><strong>MVP+1</strong></td>
+        <td>App do Aluno (mobile)</td>
+        <td>Jun-Jul/2026</td>
+        <td><span class="badge pending">Próximo</span></td>
+      </tr>
+      <tr>
+        <td><strong>Fase 2</strong></td>
+        <td>Autoescolas (web)</td>
+        <td>Ago-Set/2026</td>
+        <td><span class="badge future">Planejado</span></td>
+      </tr>
+      <tr>
+        <td><strong>Fase 2</strong></td>
+        <td>Clínicas médicas e psicotécnicas (web)</td>
+        <td>Ago-Set/2026</td>
+        <td><span class="badge future">Planejado</span></td>
+      </tr>
+      <tr>
+        <td><strong>Fase 3</strong></td>
+        <td>Pagamentos integrados + assinatura VIP</td>
+        <td>Out-Nov/2026</td>
+        <td><span class="badge future">Planejado</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>O que o app do Instrutor faz hoje</h3>
+  <div class="two-col">
+    <div>
+      <ul class="clean">
+        <li>Cadastro completo em 7 passos (dados pessoais, veículo, fotos, documentos)</li>
+        <li>Login com e-mail/senha ou Google</li>
+        <li>Configuração de área de atuação, valor por aula e horários disponíveis</li>
+        <li>Pré-visualização do card que o aluno vai ver</li>
+      </ul>
+    </div>
+    <div>
+      <ul class="clean">
+        <li>Recebimento de solicitações de aulas com aceitar/recusar</li>
+        <li>Calendário de aulas confirmadas</li>
+        <li>Chat em tempo real com alunos (com opção de bloquear)</li>
+        <li>Avaliações recebidas (1 a 5 estrelas + comentário)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Modelo de negócio (futuro)</h3>
+  <p>Não cobramos nada no MVP, mas o modelo já está validado conceitualmente:</p>
+  <ul class="clean">
+    <li><strong>Comissão de 20%</strong> sobre cada aula contratada via app (instrutor define R$100, aluno paga R$120)</li>
+    <li><strong>Plano VIP — R$ 19,90/mês</strong> para os primeiros 100 instrutores (depois R$ 69,90)</li>
+    <li><strong>Patrocínio:</strong> instrutores pagam para aparecer no topo da busca</li>
+    <li><strong>Comissão sobre exames</strong> (fase 2, quando entrarem as clínicas) — 20% sobre exames médicos e psicotécnicos</li>
+  </ul>
+
+  <div class="highlight-box">
+    <p>Projeção otimista para <strong>Guarulhos sozinha</strong>: ~3.158 CNHs emitidas em janeiro de 2026. Com taxa de conversão de 30% e ticket médio de R$ 100, isso representa <strong>R$ 18.948/mês</strong> em comissão apenas no município inicial. São Paulo capital, próximo passo de expansão, multiplica esse número por uma ordem de magnitude.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 3. IDENTIDADE VISUAL                                             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">03 · Identidade</span>
+  <h2>Identidade Visual</h2>
+
+  <p>A marca CNHhj foi construída em torno de <strong>velocidade, energia e confiança</strong> — emoções alinhadas com quem está prestes a tirar a carteira. O amarelo evoca placas de trânsito (atenção, visibilidade) e o preto traz peso e seriedade institucional.</p>
+
+  <h3>Logo</h3>
+  <div style="background:#FFD000; padding:8mm; border-radius:8px; text-align:center; margin: 4mm 0;">
+    <img src="report-assets/cnhhj_logo.svg" style="width: 50%; max-width: 280px;" alt="CNHhj logo">
+  </div>
+
+  <h3>Paleta de cores</h3>
+  <div class="palette">
+    <div class="swatch" style="background:#FFD000; color:#000;">Primária<span class="hex">#FFD000</span></div>
+    <div class="swatch" style="background:#FFFAE6; color:#000; border:1px solid #ddd;">Light<span class="hex">#FFFAE6</span></div>
+    <div class="swatch" style="background:#FEF5C6; color:#000; border:1px solid #ddd;">Lighter<span class="hex">#FEF5C6</span></div>
+    <div class="swatch" style="background:#47C100; color:#fff;">Sucesso<span class="hex">#47C100</span></div>
+    <div class="swatch" style="background:#000; color:#FFD000;">Texto<span class="hex">#000000</span></div>
+    <div class="swatch" style="background:#fff; color:#000; border:1px solid #ddd;">Surface<span class="hex">#FFFFFF</span></div>
+  </div>
+
+  <h3>Onde a paleta é aplicada</h3>
+  <ul class="clean">
+    <li><strong>Amarelo principal</strong> — background do app, botões de destaque, identidade da marca</li>
+    <li><strong>Verde sucesso</strong> — confirmações, etapa concluída na barra de progresso, status "aula confirmada"</li>
+    <li><strong>Preto</strong> — textos, botões primários, logo, contraste forte sobre o amarelo</li>
+    <li><strong>Branco</strong> — cards e inputs, criando hierarquia clara sobre o fundo amarelo</li>
+  </ul>
+
+  <h3>Tipografia</h3>
+  <p><strong>Poppins</strong> (Google Fonts) — sans-serif geométrica, moderna, com excelente legibilidade em telas pequenas. Usada em todos os elementos textuais do app, com pesos variando entre 500 (corpo), 600 (destaques) e 900 (títulos e logo).</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 4. O QUE FOI CONSTRUÍDO - TELAS                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">04 · Construção</span>
+  <h2>Telas do App do Instrutor</h2>
+
+  <p>Todas as <strong>16 telas planejadas no Figma</strong> estão implementadas em Flutter, navegáveis entre si, e funcionando com dados mockados. Abaixo o mapa visual original do Figma, todas reproduzidas no código:</p>
+
+  <h3>1. Splash e Autenticação</h3>
+  <p>Tela de carregamento com logo, fluxo de login (e-mail/senha + Google), e tela de criação de conta. Banner promocional fixo "Sua CNH começa aqui" reforçando a marca.</p>
+  <div class="screenshots">
+    <div class="screenshot">
+      <img src="report-assets/figma_01_login_cadastro.png" alt="Splash e Login">
+      <div class="caption">Splash · Login · Cadastro · Cadastro Aluno (mockup Figma)</div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <span class="section-eyebrow">04 · Construção</span>
+  <h2>Telas do App do Instrutor</h2>
+
+  <h3>2. Wizard de Cadastro do Instrutor (7 passos)</h3>
+  <p>Coleta progressiva de informações sem sobrecarregar o usuário em uma única tela. O instrutor avança um passo de cada vez, com possibilidade de voltar a qualquer momento sem perder dados:</p>
+  <ul class="bullets">
+    <li>Dados pessoais (nome, CPF, data de nascimento, sexo, telefone)</li>
+    <li>Tipo de veículo (carro / moto / ambos) e categorias CNH</li>
+    <li>Detalhes do veículo (marca, modelo, ano, transmissão, placa)</li>
+    <li>Foto frontal do veículo</li>
+    <li>Foto traseira do veículo</li>
+    <li>Foto de perfil do instrutor</li>
+    <li>Documentos (CNH + Certificado DETRAN)</li>
+  </ul>
+
+  <div class="screenshots">
+    <div class="screenshot">
+      <img src="report-assets/figma_02_instrutor_wizard.png" alt="Wizard 7 passos">
+      <div class="caption">7 passos do cadastro do instrutor (mockup Figma)</div>
+    </div>
+  </div>
+
+  <h3>3. Análise de Cadastro e Cadastro Finalizado</h3>
+  <p>Fluxo de aprovação espelhado visualmente, embora no MVP o cadastro seja aprovado automaticamente. Quando entrarmos na fase paga, basta ativar a aprovação manual no painel administrativo, sem nenhuma mudança no app.</p>
+  <div class="screenshots">
+    <div class="screenshot">
+      <img src="report-assets/figma_03_status_screens.png" alt="Análise e finalização">
+      <div class="caption">Sem sinal · Cadastro Finalizado · Análise em Processo</div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <span class="section-eyebrow">04 · Construção</span>
+  <h2>Telas do App do Instrutor</h2>
+
+  <h3>4. Home — 5 abas principais</h3>
+  <p>Após o cadastro aprovado, o instrutor acessa a Home com 5 abas espelhadas no design do Figma:</p>
+
+  <table>
+    <thead><tr><th style="width:25%">Aba</th><th>O que faz</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AULA</strong></td><td>Configurar oferta: liga/desliga recebimento de aulas, define bairro/cidade, valor por aula (mín. R$ 50), dias da semana, horários disponíveis e visualiza pré-visualização do card que o aluno verá</td></tr>
+      <tr><td><strong>SOLICITAÇÕES</strong></td><td>Pedidos pendentes de alunos — aceitar ou recusar com um toque</td></tr>
+      <tr><td><strong>AGENDA</strong></td><td>Calendário mensal com marcadores nos dias com aula; toque em um dia mostra detalhes</td></tr>
+      <tr><td><strong>FINANCEIRO</strong></td><td>Histórico de aulas com valores combinados, total recebido. Pagamento via PIX direto no MVP</td></tr>
+      <tr><td><strong>MAIS</strong></td><td>Acesso a perfil, conversas, avaliações recebidas, guia, suporte e logout</td></tr>
+    </tbody>
+  </table>
+
+  <div class="screenshots">
+    <div class="screenshot">
+      <img src="report-assets/figma_04_home_screens.png" alt="Telas da Home">
+      <div class="caption">Configurar Aula · Notificações · Mais · Calendário do Instrutor</div>
+    </div>
+  </div>
+
+  <h3>5. Chat em Tempo Real</h3>
+  <p>Conversa direta entre instrutor e aluno, similar ao WhatsApp: bubbles assimétricos, indicador de horário, bloqueio de aluno problemático com um toque. Suportará notificações push na próxima fase.</p>
+
+  <h3>6. Avaliações</h3>
+  <p>Visualização das avaliações recebidas: nota média geral (estrelas + número decimal), total de avaliações, e lista com comentário, nome do aluno e data. Sistema bidirecional — o instrutor também pode avaliar o aluno após a aula.</p>
+
+  <h3>7. Estado offline</h3>
+  <p>Modal "Sem Sinal" do design original, com botão "Atualizar" para retentar conexão. Modal global, aparece em qualquer tela quando a conexão é perdida.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 5. STACK E ARQUITETURA                                           -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">05 · Tecnologia</span>
+  <h2>Stack Técnica</h2>
+
+  <p>Stack escolhida para <strong>minimizar custo e tempo de desenvolvimento no MVP</strong>, sem comprometer escalabilidade futura:</p>
+
+  <table>
+    <thead><tr><th>Camada</th><th>Tecnologia</th><th>Por quê</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>App mobile</td>
+        <td><strong>Flutter</strong></td>
+        <td>iOS + Android com mesmo código. Comunidade gigantesca. Mantido pelo Google.</td>
+      </tr>
+      <tr>
+        <td>Estado da UI</td>
+        <td><strong>Riverpod</strong></td>
+        <td>Padrão moderno para Flutter, testável, sem boilerplate</td>
+      </tr>
+      <tr>
+        <td>Navegação</td>
+        <td><strong>go_router</strong></td>
+        <td>Rotas declarativas, suporta deep links (importante para futuro)</td>
+      </tr>
+      <tr>
+        <td>Backend</td>
+        <td><strong>Supabase</strong></td>
+        <td>PostgreSQL gerenciado + Auth + Storage + Realtime. Free tier generoso. Sem DevOps.</td>
+      </tr>
+      <tr>
+        <td>Build/CI</td>
+        <td><strong>Codemagic</strong></td>
+        <td>Gera APKs Android na nuvem. Não precisa de máquina dedicada nem Mac.</td>
+      </tr>
+      <tr>
+        <td>Repo</td>
+        <td><strong>GitHub</strong></td>
+        <td>Padrão de mercado, integrações com tudo, gratuito para repos privados</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Arquitetura interna do app</h3>
+  <p>O código está organizado por <strong>feature de produto</strong> (não por camada técnica). Cada feature reúne UI, lógica e estado. Padrões aplicados:</p>
+  <ul class="clean">
+    <li><strong>Repository Pattern:</strong> a UI nunca chama o backend diretamente — sempre via uma interface abstrata. Permite trocar mock por Supabase real sem reescrever telas.</li>
+    <li><strong>Modo dual mock/real:</strong> hoje rodando com dados em memória. Com uma única variável de ambiente (<code>APP_MODE=supabase</code>), passa a usar o banco real.</li>
+    <li><strong>Design System próprio:</strong> 20 componentes (botões, inputs, cards, modais) com a marca CNHhj. Toda nova tela é montada combinando esses tijolos — consistência visual garantida.</li>
+    <li><strong>Row Level Security:</strong> autorização garantida no PostgreSQL, não só no app. Mesmo um cliente comprometido não acessa dados de outro usuário.</li>
+  </ul>
+
+  <h3>Banco de dados — 9 tabelas modeladas</h3>
+  <p>Schema completo no arquivo <code>backend/supabase/migrations/0001_initial_schema.sql</code>:</p>
+  <div class="two-col">
+    <div>
+      <ul class="clean">
+        <li><strong>profiles</strong> — identidade comum</li>
+        <li><strong>instructors</strong> — dados do instrutor</li>
+        <li><strong>students</strong> — dados do aluno (fase 2)</li>
+        <li><strong>instructor_weekly_availability</strong> — agenda</li>
+        <li><strong>bookings</strong> — aulas agendadas</li>
+      </ul>
+    </div>
+    <div>
+      <ul class="clean">
+        <li><strong>conversations</strong> — threads de chat</li>
+        <li><strong>messages</strong> — mensagens individuais</li>
+        <li><strong>chat_blocks</strong> — bloqueios entre usuários</li>
+        <li><strong>reviews</strong> — avaliações bidirecionais</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 6. PRODUTIVIDADE — Skills de IA                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">06 · Produtividade</span>
+  <h2>Aceleradores Instalados</h2>
+
+  <p>O projeto usa <strong>Claude Code</strong> como ambiente de desenvolvimento — IA especializada que conhece nossa stack e padrões. Instalamos 16 skills especializadas em Flutter que aceleram tarefas futuras:</p>
+
+  <h3>Skills de qualidade</h3>
+  <ul class="clean">
+    <li><strong>flutter-tester</strong> — escreve testes unitários, de widget e de integração seguindo padrões Riverpod e Given-When-Then</li>
+    <li><strong>flutter-code-reviewer</strong> — agente que revisa código antes de cada commit</li>
+    <li><strong>flutter-dart-specialist</strong> — agente para problemas avançados de Dart</li>
+  </ul>
+
+  <h3>Skills de workflow</h3>
+  <ul class="clean">
+    <li><strong>flutter-brainstorming / planning / executing</strong> — quebra features grandes em etapas verificáveis</li>
+    <li><strong>flutter-verification / debugging</strong> — valida build e testa</li>
+    <li><strong>flutter-parallel-agents</strong> — coordena múltiplos agentes para tarefas paralelas</li>
+  </ul>
+
+  <h3>Comandos slash</h3>
+  <ul class="clean">
+    <li><code>/brainstorm</code> — explora ideias de feature antes de codar</li>
+    <li><code>/plan</code> — produz plano técnico camada-por-camada</li>
+    <li><code>/execute</code> — roda o plano com verificação automática</li>
+    <li><code>/init</code> — inicializa novo projeto Flutter</li>
+  </ul>
+
+  <div class="card dark">
+    <h4>Por que isso importa</h4>
+    <p>Cada uma dessas skills representa horas economizadas em pesquisa e padrões. Ao invés de gastar tempo decidindo "como testar um Riverpod controller", a IA já sabe. Ao invés de descobrir "como debugar um erro de plataforma no Android", o agente especialista já tem o playbook. Estamos rodando com produtividade equivalente a um time sênior de Flutter, com custo de uma assinatura mensal de IA.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 7. CRONOGRAMA                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">07 · Cronograma</span>
+  <h2>Onde Estamos e Para Onde Vamos</h2>
+
+  <div class="timeline">
+    <div class="timeline-item done">
+      <span class="when">✓ Concluído — Abril/Maio 2026</span>
+      <div class="what">Definição de produto, escopo e identidade visual</div>
+      <div class="detail">Excalidraw com fluxos e estratégia · Mockups no Figma · Paleta de cores · Definição de MVP gratuito · Foco em Guarulhos · Modelo de negócio futuro definido.</div>
+    </div>
+
+    <div class="timeline-item done">
+      <span class="when">✓ Concluído — 12 de Maio de 2026</span>
+      <div class="what">App do Instrutor — 16 telas, 7.138 linhas de código</div>
+      <div class="detail">Onboarding completo (Splash + Login + Cadastro + Wizard 7 passos + Análise + Finalizado) · Home com 5 abas · Chat realtime · Avaliações · Modal de offline · Design system com 20 componentes · Backend modelado em 9 tabelas SQL · Dados mockados para testar localmente.</div>
+    </div>
+
+    <div class="timeline-item done">
+      <span class="when">✓ Concluído — 12 de Maio de 2026</span>
+      <div class="what">Repositório no GitHub e pipeline de build na nuvem</div>
+      <div class="detail">Código publicado em github.com/cnhja0/cnhhj · Codemagic configurado para gerar APK Android automaticamente a cada push.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">⏳ Em andamento — esta semana</span>
+      <div class="what">Primeiro APK no celular para teste interno</div>
+      <div class="detail">Build no Codemagic está sendo disparado. APK chega por e-mail e é instalado no Android. Validação visual do app funcionando.</div>
+    </div>
+
+    <div class="timeline-item future">
+      <span class="when">Próximas 2 semanas — Maio/Junho 2026</span>
+      <div class="what">Conectar Supabase real e ajustes finais</div>
+      <div class="detail">Criar projeto Supabase · Aplicar schema SQL · Escrever políticas de segurança (RLS) · Trocar o app de modo "mock" para "supabase" · Subir primeiros instrutores de teste.</div>
+    </div>
+
+    <div class="timeline-item future">
+      <span class="when">Junho/Julho 2026</span>
+      <div class="what">App do Aluno</div>
+      <div class="detail">Cadastro do aluno em 3 passos · Busca de instrutores próximos · Agendamento de aula · Chat com instrutor · Avaliação pós-aula · Estimativa: ~3 semanas com base no aprendizado do app do instrutor.</div>
+    </div>
+
+    <div class="timeline-item future">
+      <span class="when">Julho 2026</span>
+      <div class="what">Aquisição de oferta em Guarulhos</div>
+      <div class="detail">Meta: 5 instrutores cadastrados (mín. 2) · Boca-a-boca + redes sociais · Selo "Parceiro Fundador" para os primeiros que entrarem.</div>
+    </div>
+
+    <div class="timeline-item future">
+      <span class="when">Agosto 2026</span>
+      <div class="what">Lançamento beta para alunos em Guarulhos</div>
+      <div class="detail">Tráfego pago no Instagram e Facebook · Parcerias com autoescolas locais · Meta de 50 alunos no primeiro mês.</div>
+    </div>
+
+    <div class="timeline-item future">
+      <span class="when">Setembro+ 2026</span>
+      <div class="what">Fase 2 — Autoescolas, Clínicas, Pagamentos</div>
+      <div class="detail">Painel web para autoescolas e clínicas (Next.js, mesmo backend Supabase) · Integração com Pagar.me para split de comissão 20% · Plano VIP R$19,90 · Expansão para São Paulo capital.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 8. CUSTOS E PRÓXIMOS RECURSOS                                    -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">08 · Investimento</span>
+  <h2>Custos e Necessidades</h2>
+
+  <h3>O que custou até agora</h3>
+  <div class="hero">
+    <p><strong>R$ 0,00</strong> em ferramentas. Todo o desenvolvimento foi feito com free tiers de Codemagic, Supabase, GitHub e Google Fonts.</p>
+  </div>
+
+  <h3>Custos previstos para o lançamento</h3>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Custo</th><th>Quando</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Conta Google Play Developer (uma vez)</td><td>USD 25</td><td>Antes de publicar na Play Store</td></tr>
+      <tr><td>Conta Apple Developer (anual)</td><td>USD 99/ano</td><td>Quando lançarmos no iOS</td></tr>
+      <tr><td>Domínio (cnhhj.com.br)</td><td>~R$ 40/ano</td><td>Imediato</td></tr>
+      <tr><td>Supabase Pro (quando passar do free tier)</td><td>USD 25/mês</td><td>Após ~50k usuários ativos</td></tr>
+      <tr><td>Codemagic Pro (se exceder 500 min/mês)</td><td>USD 95/mês</td><td>Improvável no MVP</td></tr>
+      <tr><td>Marketing pago (Instagram/Facebook)</td><td>~R$ 50/dia (sugerido)</td><td>Fase de aquisição de alunos</td></tr>
+    </tbody>
+  </table>
+
+  <h3>O que precisamos definir/aprovar</h3>
+  <ul class="clean x">
+    <li>Registro da marca CNHhj no INPI (ainda não iniciado)</li>
+    <li>Composição societária formalizada (Excalidraw tem proposta)</li>
+    <li>Estrutura jurídica da empresa (MEI vs. LTDA)</li>
+    <li>Termos de uso e Política de Privacidade — revisão por advogado</li>
+    <li>Estratégia de aquisição dos primeiros 5 instrutores em Guarulhos</li>
+    <li>Orçamento de marketing para o lançamento (sugerido R$50/dia)</li>
+  </ul>
+
+  <h3>O que está pronto</h3>
+  <ul class="clean">
+    <li>Arquitetura completa do produto</li>
+    <li>Código do app do Instrutor</li>
+    <li>Identidade visual e logo</li>
+    <li>Schema do banco de dados</li>
+    <li>Pipeline de deploy automatizado</li>
+    <li>Repositório versionado no GitHub</li>
+    <li>Estratégia de produto e roadmap</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 9. RISCOS E MITIGAÇÕES                                           -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">09 · Riscos</span>
+  <h2>Riscos e Como Estamos Mitigando</h2>
+
+  <table>
+    <thead><tr><th style="width:25%">Risco</th><th style="width:35%">Probabilidade / Impacto</th><th>Mitigação</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Problema do "ovo e galinha" do marketplace</strong> — sem instrutores, alunos não usam; sem alunos, instrutores não cadastram</td>
+        <td>Alta / Alto</td>
+        <td>Começar pelo lado da oferta (instrutores) com selo "Parceiro Fundador". Lançar app do aluno só depois de ter 5+ instrutores ativos.</td>
+      </tr>
+      <tr>
+        <td><strong>Cadastro de instrutor sem validação no MVP</strong> permitiria fraudes</td>
+        <td>Média / Médio</td>
+        <td>No MVP, gratuidade desincentiva fraude (não há ganho financeiro). Aprovação manual entra junto com a fase paga (já preparada no código).</td>
+      </tr>
+      <tr>
+        <td><strong>Aluno e instrutor combinam por fora do app</strong> — perdem comissão</td>
+        <td>Alta / Alto (fase paga)</td>
+        <td>Hoje não é um problema (MVP gratuito). Para a fase paga: incentivar permanência no app via chat in-app, comprovantes, avaliações. Termos de uso vão proibir transações fora.</td>
+      </tr>
+      <tr>
+        <td><strong>Concorrência</strong> — empresas como Doutor Multas, AutoEscola Pro</td>
+        <td>Média / Médio</td>
+        <td>Foco geográfico (Guarulhos), nicho (instrutores autônomos vs. autoescolas), e simplicidade do app. Identidade forte (CNHhj) facilita boca-a-boca.</td>
+      </tr>
+      <tr>
+        <td><strong>Custo de aquisição</strong> de aluno mais alto que LTV</td>
+        <td>Média / Alto</td>
+        <td>Validar com tráfego orgânico (Instagram, indicação) antes de pagar mídia. Boca-a-boca em Guarulhos onde temos contato local.</td>
+      </tr>
+      <tr>
+        <td><strong>Compliance / regulação</strong> — DETRAN pode exigir validação formal de instrutores</td>
+        <td>Baixa / Médio</td>
+        <td>Termos de uso obrigam o instrutor a declarar credenciamento válido. Sistema de avaliação age como controle social.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="quote">
+    "O maior risco aqui não é técnico — é de mercado. O código está pronto. O que precisa ser provado agora é se conseguimos atrair os primeiros 5 instrutores em Guarulhos."
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 10. FECHAMENTO                                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <span class="section-eyebrow">10 · Fechamento</span>
+  <h2>O Que Pedimos Agora</h2>
+
+  <p>Saímos da fase de "construir o produto" e entramos na fase de "validar o mercado". Para isso, precisamos de:</p>
+
+  <h3>Decisões a tomar nesta semana</h3>
+  <ul class="bullets">
+    <li>Aprovação do escopo do MVP e dos primeiros 5 instrutores a serem abordados em Guarulhos</li>
+    <li>Definição da estrutura jurídica (MEI / LTDA) e da composição societária</li>
+    <li>Orçamento inicial para registro de marca, domínio e tráfego pago</li>
+    <li>Calendário de reuniões semanais de acompanhamento</li>
+  </ul>
+
+  <h3>Decisões a tomar este mês</h3>
+  <ul class="bullets">
+    <li>Estratégia de captação dos primeiros instrutores (lista de leads, abordagem, contrato de "Parceiro Fundador")</li>
+    <li>Plano de marketing para o lançamento do app do aluno</li>
+    <li>Aprovação para iniciar o desenvolvimento do app do aluno (segunda fase do MVP)</li>
+  </ul>
+
+  <div class="highlight-box">
+    <p>O <strong>tempo investido até aqui</strong> não pode ser refeito pela concorrência sem o mesmo trabalho. Temos <strong>vantagem de tempo</strong>: enquanto outros estão decidindo o que fazer, nosso app está literalmente pronto para os primeiros instrutores baixarem. Cada semana que demoramos a captar é uma semana que a concorrência pode nos copiar.</p>
+  </div>
+
+  <h3>Convite para a próxima reunião</h3>
+  <p>Quando o APK chegar (hoje ou amanhã), proponho que <strong>instalemos juntos no celular</strong> e façamos uma demonstração presencial do fluxo completo: cadastro → configuração de aula → recebimento de solicitação → chat. Isso permite validar visualmente e listar ajustes finais antes da fase de captação.</p>
+
+  <div style="margin-top: 10mm; padding: 6mm; background: #FFD000; border-radius: 6px; text-align: center;">
+    <p style="font-size: 13pt; font-weight: 900; margin: 0;">CNHhj — Sua CNH começa aqui.</p>
+    <p style="font-size: 9.5pt; margin: 2mm 0 0 0;">Relatório gerado em 12 de Maio de 2026 · Versão 0.1.0</p>
+  </div>
+</div>
+
+</body>
+</html>

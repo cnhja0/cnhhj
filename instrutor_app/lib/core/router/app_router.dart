@@ -59,7 +59,7 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         builder: (BuildContext context, GoRouterState state) =>
             const FinishedScreen(),
       ),
-      // ─── Home (5 abas via IndexedStack interno) ──────────────────
+      // ─── Home (5 abas via IndexedStack: Home, Aula, Solicit., Agenda, Mais) ──
       GoRoute(
         path: AppRoutes.home,
         name: 'home',
@@ -70,23 +70,17 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         path: AppRoutes.lesson,
         name: 'home-lesson',
         builder: (BuildContext context, GoRouterState state) =>
-            const HomeShell(),
+            const HomeShell(initialTab: 1),
       ),
       GoRoute(
         path: AppRoutes.requests,
         name: 'home-requests',
         builder: (BuildContext context, GoRouterState state) =>
-            const HomeShell(initialTab: 1),
+            const HomeShell(initialTab: 2),
       ),
       GoRoute(
         path: AppRoutes.schedule,
         name: 'home-schedule',
-        builder: (BuildContext context, GoRouterState state) =>
-            const HomeShell(initialTab: 2),
-      ),
-      GoRoute(
-        path: AppRoutes.financial,
-        name: 'home-financial',
         builder: (BuildContext context, GoRouterState state) =>
             const HomeShell(initialTab: 3),
       ),

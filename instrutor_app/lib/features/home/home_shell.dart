@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import 'tabs/tab_financial.dart';
+import 'home_state.dart';
+import 'tabs/tab_home.dart';
 import 'tabs/tab_lesson.dart';
 import 'tabs/tab_more.dart';
 import 'tabs/tab_requests.dart';
@@ -10,12 +11,13 @@ import 'tabs/tab_schedule.dart';
 
 /// Casca do app pós-login: bottom nav **flutuante e animada** com 5 abas.
 ///
-/// Visual inspirado em apps modernos: barra preta arredondada flutuando
-/// acima do fundo amarelo, com indicador circular amarelo que "salta"
-/// para o item ativo com animação suave.
+/// Ordem: Home · Aula · Solicitações · Agenda · Mais
+/// (a aba Financeiro foi removida no MVP — sem pagamentos no app)
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key, this.initialTab = 0});
 
+  /// Aba inicial. As rotas /home/aula, /home/solicitacoes, etc. apontam
+  /// para cá com o índice correspondente.
   final int initialTab;
 
   @override
@@ -23,27 +25,35 @@ class HomeShell extends ConsumerStatefulWidget {
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
-  late int _index = widget.initialTab;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tabIndexProvider.notifier).state = widget.initialTab;
+    });
+  }
 
   static const List<_TabInfo> _tabs = <_TabInfo>[
-    _TabInfo('Aula',          Icons.school_outlined,           Icons.school_rounded),
+    _TabInfo('Home',          Icons.home_outlined,              Icons.home_rounded),
+    _TabInfo('Aula',          Icons.school_outlined,            Icons.school_rounded),
     _TabInfo('Solicitações',  Icons.notifications_none_rounded, Icons.notifications_rounded),
-    _TabInfo('Agenda',        Icons.calendar_today_outlined,   Icons.calendar_today_rounded),
-    _TabInfo('Financeiro',    Icons.attach_money_rounded,      Icons.attach_money_rounded),
-    _TabInfo('Mais',          Icons.more_horiz_rounded,        Icons.more_horiz_rounded),
+    _TabInfo('Agenda',        Icons.calendar_today_outlined,    Icons.calendar_today_rounded),
+    _TabInfo('Mais',          Icons.more_horiz_rounded,         Icons.more_horiz_rounded),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final int index = ref.watch(tabIndexProvider);
+
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: IndexedStack(
-        index: _index,
+        index: index,
         children: const <Widget>[
+          TabHome(),
           TabLesson(),
           TabRequests(),
           TabSchedule(),
-          TabFinancial(),
           TabMore(),
         ],
       ),
@@ -53,8 +63,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           child: _FloatingNavBar(
             tabs: _tabs,
-            currentIndex: _index,
-            onTap: (int i) => setState(() => _index = i),
+            currentIndex: index,
+            onTap: (int i) =>
+                ref.read(tabIndexProvider.notifier).state = i,
           ),
         ),
       ),
@@ -108,7 +119,6 @@ class _FloatingNavBar extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: <Widget>[
-                  // Indicador circular amarelo (cresce quando ativo)
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 320),
                     curve: Curves.easeOutCubic,
@@ -119,7 +129,6 @@ class _FloatingNavBar extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  // Ícone (escala sutil + troca cor quando ativo)
                   AnimatedScale(
                     duration: const Duration(milliseconds: 320),
                     curve: Curves.easeOutCubic,

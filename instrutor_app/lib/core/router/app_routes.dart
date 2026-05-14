@@ -14,13 +14,13 @@ class AppRoutes {
   static const String onboardingReview = '/onboarding/review';
   static const String onboardingFinished = '/onboarding/finished';
 
-  // ─── Home (shell com bottom nav) ───────────────────────────────────
+  // ─── Home (shell com bottom nav: Home · Aula · Solicitações · Agenda · Mais) ─
   static const String home          = '/home';
   static const String lesson        = '/home/aula';
   static const String requests      = '/home/solicitacoes';
   static const String schedule      = '/home/agenda';
-  static const String financial     = '/home/financeiro';
   static const String more          = '/home/mais';
+  // (rota financial removida — sem aba Financeiro no MVP)
 
   // ─── Detalhes ──────────────────────────────────────────────────────
   static const String chatList      = '/chats';
