@@ -11,6 +11,7 @@ import '../../features/onboarding/analysis_screen.dart';
 import '../../features/onboarding/finished_screen.dart';
 import '../../features/onboarding/onboarding_flow_screen.dart';
 import '../../features/onboarding/splash_screen.dart';
+import '../../features/profile/profile_edit_screen.dart';
 import '../../features/reviews/reviews_screen.dart';
 import 'app_routes.dart';
 
@@ -167,6 +168,13 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: 'reviews',
         pageBuilder: (BuildContext context, GoRouterState state) =>
             _fadeSlidePage(child: const ReviewsScreen(), state: state),
+      ),
+      // ─── Profile ─────────────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.profileEdit,
+        name: 'profile-edit',
+        pageBuilder: (BuildContext context, GoRouterState state) =>
+            _fadeSlidePage(child: const ProfileEditScreen(), state: state),
       ),
     ],
     errorBuilder: (BuildContext context, GoRouterState state) => Scaffold(

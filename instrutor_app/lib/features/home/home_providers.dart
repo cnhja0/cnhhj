@@ -4,6 +4,7 @@ import '../../data/models/booking.dart';
 import '../../data/models/conversation.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/instructor.dart';
+import '../../data/models/profile.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/mock/_seed.dart';
 
@@ -21,6 +22,17 @@ import '../../data/repositories/mock/_seed.dart';
 final Provider<String> currentUserIdProvider = Provider<String>((Ref ref) {
   return ref.watch(authRepositoryProvider).currentSession?.userId ??
       MockState.currentInstructorId;
+});
+
+/// Profile do usuário logado. Invalida com `ref.invalidate(currentProfileProvider)`
+/// quando os dados pessoais mudam (ex: após salvar Edição de Perfil).
+final FutureProvider<Profile?> currentProfileProvider =
+    FutureProvider<Profile?>((Ref ref) async {
+  try {
+    return await ref.watch(authRepositoryProvider).currentProfile();
+  } catch (_) {
+    return null;
+  }
 });
 
 final FutureProvider<Instructor?> currentInstructorProvider =

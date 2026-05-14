@@ -10,6 +10,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/models/profile.dart';
 import '../../../data/providers.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../home_providers.dart';
 
 /// Aba MAIS — menu com Perfil, Conversas, Avaliações, Guia, Suporte, Sair.
 class TabMore extends ConsumerWidget {
@@ -27,9 +28,7 @@ class TabMore extends ConsumerWidget {
       _MenuEntry(
         icon: PhosphorIconsDuotone.userCircle,
         label: 'Perfil',
-        onTap: () {
-          // TODO: navegar para edição de perfil
-        },
+        onTap: () => context.push(AppRoutes.profileEdit),
       ),
       _MenuEntry(
         icon: PhosphorIconsDuotone.chatCircleDots,
@@ -137,58 +136,63 @@ class _UserHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<Profile>(
-      future: ref.read(authRepositoryProvider).currentProfile(),
-      builder: (BuildContext ctx, AsyncSnapshot<Profile> snap) {
-        final String name = snap.data?.fullName ?? 'Instrutor';
-        return CnhhjCard(
-          child: Row(
-            children: <Widget>[
-              CnhhjAvatar(size: 60, fullName: name),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    // Usa o provider compartilhado — quando profile_edit invalida,
+    // este card também se atualiza com nome/foto novos.
+    final AsyncValue<Profile?> profileAsync =
+        ref.watch(currentProfileProvider);
+    final Profile? profile = profileAsync.value;
+    final String name = profile?.fullName ?? 'Instrutor';
+    return CnhhjCard(
+      onTap: () => context.push(AppRoutes.profileEdit),
+      child: Row(
+        children: <Widget>[
+          CnhhjAvatar(
+            size: 60,
+            fullName: name,
+            imageUrl: profile?.avatarUrl,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Row(
                   children: <Widget>[
-                    Text(
-                      name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
+                    const Icon(
+                      PhosphorIconsFill.steeringWheel,
+                      size: 14,
+                      color: AppColors.textSecondary,
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: <Widget>[
-                        const Icon(
-                          PhosphorIconsFill.steeringWheel,
-                          size: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Instrutor de aulas práticas',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 4),
+                    Text(
+                      'Instrutor de aulas práticas',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Icon(
-                PhosphorIconsRegular.caretRight,
-                size: 18,
-                color: AppColors.textMuted,
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+          Icon(
+            PhosphorIconsRegular.caretRight,
+            size: 18,
+            color: AppColors.textMuted,
+          ),
+        ],
+      ),
     );
   }
 }

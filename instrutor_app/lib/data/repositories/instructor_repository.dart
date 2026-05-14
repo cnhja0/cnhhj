@@ -1,3 +1,4 @@
+import '../models/enums.dart';
 import '../models/instructor.dart';
 import '../models/profile.dart';
 
@@ -55,11 +56,14 @@ abstract class InstructorRepository {
   /// Atualiza ou cria o registro de instrutor. Retorna a versão atualizada.
   Future<Instructor> upsert(String id, InstructorUpdate patch);
 
-  /// Atualiza apenas o profile (nome, telefone, avatar — fora dos campos
+  /// Atualiza campos do profile (identidade pessoal — fora dos campos
   /// específicos de instructor).
   Future<Profile> updateProfile(
     String id, {
     String? fullName,
+    String? cpf,
+    DateTime? birthDate,
+    Gender? gender,
     String? phone,
     String? avatarUrl,
   });

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CNHhj — Relatório de Progresso v2</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm 16mm 16mm 16mm;
+    page-break-after: always;
+    background: #ffffff;
+    position: relative;
+  }
+  .page:last-of-type { page-break-after: auto; }
+
+  /* Cover */
+  .cover {
+    background: #FFD000;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .cover-inner {
+    padding: 32mm 18mm 18mm 18mm;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .cover .logo { width: 200px; margin-bottom: 24mm; }
+  .cover h1 {
+    font-size: 42pt; font-weight: 900; line-height: 1.05;
+    margin: 0 0 5mm 0; color: #000; letter-spacing: -1px;
+  }
+  .cover .subtitle { font-size: 15pt; font-weight: 600; color: #000; margin-bottom: 8mm; }
+  .cover .badge-v2 {
+    display: inline-block;
+    background: #000;
+    color: #FFD000;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 11pt;
+    font-weight: 800;
+    margin-bottom: 8mm;
+    letter-spacing: 0.5px;
+  }
+  .cover .meta { font-size: 10.5pt; color: #1a1a1a; }
+  .cover .meta p { margin: 2mm 0; }
+  .cover .meta strong { display: inline-block; min-width: 90px; }
+  .cover-footer {
+    background: #000;
+    color: #FFD000;
+    padding: 12mm 18mm;
+    font-size: 9.5pt;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .section-eyebrow {
+    display: inline-block;
+    background: #000;
+    color: #FFD000;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5mm;
+  }
+  h2 {
+    font-size: 22pt;
+    font-weight: 900;
+    margin: 0 0 6mm 0;
+    color: #000;
+    letter-spacing: -0.5px;
+  }
+  h3 {
+    font-size: 13pt;
+    font-weight: 800;
+    margin: 6mm 0 2mm 0;
+    color: #000;
+    border-bottom: 2px solid #FFD000;
+    padding-bottom: 2px;
+  }
+  h4 { font-size: 11pt; font-weight: 700; margin: 4mm 0 1mm 0; }
+  p { font-size: 10pt; margin: 0 0 2mm 0; }
+
+  .hero {
+    background: linear-gradient(135deg, #FFD000 0%, #FFE970 100%);
+    padding: 6mm 8mm;
+    border-radius: 8px;
+    margin: 0 0 5mm 0;
+    border-left: 5px solid #000;
+  }
+  .hero p { margin: 0; font-size: 10.5pt; font-weight: 500; }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3mm;
+    margin: 4mm 0;
+  }
+  .kpi {
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 6px;
+    padding: 3mm;
+    text-align: center;
+  }
+  .kpi .number {
+    font-size: 18pt;
+    font-weight: 900;
+    color: #000;
+    line-height: 1;
+    display: block;
+    margin-bottom: 1mm;
+  }
+  .kpi .label {
+    font-size: 8pt;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  ul.clean { list-style: none; padding-left: 0; }
+  ul.clean li { padding: 1.5mm 0 1.5mm 8mm; position: relative; font-size: 9.5pt; }
+  ul.clean li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #47C100;
+    font-weight: 900;
+    font-size: 11pt;
+  }
+  ul.clean.dot li:before { content: "•"; color: #000; font-size: 14pt; line-height: 0.9; }
+  ul.clean.x li:before { content: "○"; color: #aaa; }
+  ul.clean.arrow li:before { content: "→"; color: #000; font-weight: 900; }
+  ul.bullets { padding-left: 5mm; }
+  ul.bullets li { margin-bottom: 1mm; font-size: 9.5pt; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+
+  .card {
+    background: #fafafa;
+    border-left: 4px solid #FFD000;
+    padding: 4mm;
+    margin: 3mm 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .card.priority {
+    background: #FFFAE6;
+    border-left-color: #47C100;
+    border: 1px solid #47C100;
+  }
+  .card.priority h4 {
+    color: #47C100;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card.dark {
+    background: #1a1a1a;
+    color: #fff;
+    border-left-color: #FFD000;
+  }
+  .card.dark h4 { color: #FFD000; }
+
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 9pt; }
+  th { background: #000; color: #FFD000; text-align: left; padding: 2.5mm 3mm; font-weight: 700; }
+  td { padding: 2.5mm 3mm; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 8pt; font-weight: 700; }
+  .badge.ok { background: #47C100; color: #fff; }
+  .badge.priority { background: #000; color: #FFD000; }
+  .badge.pending { background: #FFD000; color: #000; }
+  .badge.future { background: #e0e0e0; color: #555; }
+  .badge.fix { background: #D32F2F; color: #fff; }
+
+  .timeline { margin: 4mm 0; position: relative; }
+  .timeline-item {
+    padding: 2mm 0 2mm 11mm;
+    border-left: 3px solid #FFD000;
+    margin-left: 4mm;
+    position: relative;
+  }
+  .timeline-item:before {
+    content: "";
+    width: 11px;
+    height: 11px;
+    background: #FFD000;
+    border: 3px solid #000;
+    border-radius: 50%;
+    position: absolute;
+    left: -6px;
+    top: 3mm;
+  }
+  .timeline-item.done:before { background: #47C100; }
+  .timeline-item.now:before { background: #FFD000; }
+  .timeline-item.next:before { background: #fff; border-color: #FFD000; }
+  .timeline-item .when { font-size: 8pt; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .timeline-item .what { font-size: 10pt; font-weight: 700; }
+  .timeline-item .detail { font-size: 9pt; color: #555; }
+
+  .commit-list { font-family: 'Consolas', 'Courier New', monospace; font-size: 8.5pt; }
+  .commit-list .hash { color: #FFD000; background: #000; padding: 1px 5px; border-radius: 3px; }
+
+  .priority-box {
+    background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+    color: #fff;
+    padding: 6mm;
+    border-radius: 8px;
+    margin: 4mm 0;
+    border: 3px solid #FFD000;
+  }
+  .priority-box h4 { color: #FFD000; margin: 0 0 3mm 0; font-size: 13pt; }
+  .priority-box strong { color: #FFD000; }
+  .priority-box ul { padding-left: 4mm; }
+  .priority-box ul li { color: #fff; font-size: 10pt; margin-bottom: 1mm; }
+
+  .quote {
+    background: #FFFAE6;
+    padding: 4mm 7mm;
+    border-radius: 6px;
+    font-style: italic;
+    font-size: 10.5pt;
+    margin: 4mm 0;
+    border-left: 4px solid #FFD000;
+  }
+
+  .highlight-box {
+    background: #000;
+    color: #fff;
+    padding: 5mm;
+    border-radius: 6px;
+    margin: 4mm 0;
+  }
+  .highlight-box strong { color: #FFD000; }
+
+  .diff {
+    background: #f5f5f5;
+    border-radius: 4px;
+    padding: 3mm;
+    font-family: 'Consolas', monospace;
+    font-size: 8.5pt;
+    margin: 2mm 0;
+  }
+  .diff .add { color: #47C100; }
+  .diff .del { color: #D32F2F; text-decoration: line-through; }
+
+  .specs-table th { background: #FFD000; color: #000; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="page cover">
+  <div class="cover-inner">
+    <img src="report-assets/cnhhj_logo.svg" class="logo" alt="CNHhj">
+    <span class="badge-v2">v2 · ATUALIZADO</span>
+    <h1>Relatório de<br>Progresso</h1>
+    <div class="subtitle">App do Instrutor — após batch de polimento UI v2</div>
+    <div class="meta">
+      <p><strong>Data:</strong> 13 de Maio de 2026</p>
+      <p><strong>Versão:</strong> 0.2.0 — polimento UI completo</p>
+      <p><strong>Foco:</strong> Lançamento em Guarulhos/SP</p>
+      <p><strong>Último commit:</strong> 3e0e8e6 (TabHeader + reatividade)</p>
+    </div>
+  </div>
+  <div class="cover-footer">
+    Confidencial · Documento Interno · CNHhj — Versão 2
+  </div>
+</div>
+
+<!-- 1. RESUMO EXECUTIVO -->
+<div class="page">
+  <span class="section-eyebrow">01 · Resumo Executivo</span>
+  <h2>Status Atual</h2>
+
+  <div class="hero">
+    <p>O <strong>App do Instrutor</strong> está com a UI v2 finalizada — interface flutuante, transições suaves, sessão persistente, reatividade entre abas e identidade visual consistente. Estamos prontos para começar features incrementais: <strong>edição de perfil é o próximo passo</strong>.</p>
+  </div>
+
+  <h3>Números do projeto agora</h3>
+  <div class="kpis">
+    <div class="kpi"><span class="number">86</span><span class="label">Arquivos Dart</span></div>
+    <div class="kpi"><span class="number">8.171</span><span class="label">Linhas de código</span></div>
+    <div class="kpi"><span class="number">14</span><span class="label">Commits</span></div>
+    <div class="kpi"><span class="number">281 KB</span><span class="label">Código Dart</span></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span class="number">21</span><span class="label">Componentes UI</span></div>
+    <div class="kpi"><span class="number">5</span><span class="label">Abas Home</span></div>
+    <div class="kpi"><span class="number">16</span><span class="label">Telas totais</span></div>
+    <div class="kpi"><span class="number">R$ 0</span><span class="label">Custo até agora</span></div>
+  </div>
+
+  <h3>O que mudou desde o último relatório</h3>
+  <table>
+    <thead><tr><th style="width:24%">Categoria</th><th>Mudanças</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Estrutura</strong></td>
+        <td>Aba FINANCEIRO removida do MVP · Nova aba <strong>HOME (dashboard)</strong> com grid de 6 quick actions, saudação dinâmica e 3 stats (Nota, Aulas, Status)</td>
+      </tr>
+      <tr>
+        <td><strong>Navegação</strong></td>
+        <td>Bottom nav flutuante preta com indicador circular amarelo animado · Trocas de aba com fade · Transições fade+slide globais em todas as 13 rotas</td>
+      </tr>
+      <tr>
+        <td><strong>Header consistente</strong></td>
+        <td>Novo widget <code>TabHeader</code> aplicado nas 5 abas — título grande peso 900 + subtítulo + logo CNHhj no canto superior direito sempre na mesma posição</td>
+      </tr>
+      <tr>
+        <td><strong>Visual</strong></td>
+        <td>Tipografia hierárquica (display/headline/title/body) · Ícones Phosphor substituindo Material · Sombras suaves nos cards · Bordas pretas 2px nos cards do grid · Empty states com pulse animation</td>
+      </tr>
+      <tr>
+        <td><strong>Reatividade</strong></td>
+        <td>Providers compartilhados em <code>home_providers.dart</code> — mudanças em uma aba refletem nas outras (switch ON/OFF, aceitar solicitação, salvar preço)</td>
+      </tr>
+      <tr>
+        <td><strong>Comportamento</strong></td>
+        <td>Splash 2s com pulse no logo · Sessão persistente via SharedPreferences (não pede login após fechar/abrir) · Pré-visualização live na configurar aula · Scale-on-press nos botões</td>
+      </tr>
+      <tr>
+        <td><strong>Bugs corrigidos</strong></td>
+        <td>Logo verdinho não aparecia (CSS class → fill inline) · Login mostrava sucesso mas não navegava · Cards do grid cortados pelo bottom nav · Mínimo R$50,00 removido</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 2. O QUE FOI CONSTRUÍDO -->
+<div class="page">
+  <span class="section-eyebrow">02 · Construção</span>
+  <h2>Tudo que está Pronto</h2>
+
+  <h3>Onboarding (completo)</h3>
+  <ul class="clean">
+    <li><strong>Splash</strong> de 2s com logo pulsando + 3 bolinhas animadas no rodapé · decide rota baseado em sessão restaurada</li>
+    <li><strong>Login</strong> com email/senha + Google · banner promocional preto com gradiente · entry animations em cascata · scale-on-press nos botões</li>
+    <li><strong>Cadastro</strong> com 2 checkboxes (Termos + Promos), validação de senha, link para Login · animações de entrada</li>
+    <li><strong>Wizard de 7 passos</strong>: dados pessoais → tipo veículo → modelo/ano/transmissão → foto frontal → foto traseira → foto perfil → documentos (CNH + DETRAN)</li>
+    <li><strong>Análise em Processo</strong> (cosmética, 2s) → <strong>Cadastro Finalizado</strong> com CTA "Configurar aula"</li>
+  </ul>
+
+  <h3>Home — 5 abas com bottom nav flutuante</h3>
+  <table>
+    <thead>
+      <tr><th style="width:22%">Aba</th><th>Conteúdo</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Home</strong></td>
+        <td>TabHeader com saudação dinâmica ("Bom dia, Carlos!") + data em pt-BR · Card único de 3 stats (Nota / Aulas / Status ON|OFF) · Grid 2x3 de quick actions com badges (Configurar aula, Solicitações, Agenda, Conversas, Avaliações, Suporte) — todos com borda preta 2px e animação cascata</td>
+      </tr>
+      <tr>
+        <td><strong>Aula</strong></td>
+        <td>TabHeader "Configurar aula" · Switch "Recebendo aulas" com sublegenda contextual · Área de atuação (bairro, cidade, UF) · Valor da aula · Grade semanal (dias + horários) · Pré-visualização LIVE do card que o aluno vê · Botão Salvar</td>
+      </tr>
+      <tr>
+        <td><strong>Solicitações</strong></td>
+        <td>TabHeader com contador · Lista de bookings pendentes com avatar, nome, data formatada, valor em pílula amarela, local em pílula cinza · Botões Recusar / Aceitar com ícones e scale-on-press · Empty state com pulse</td>
+      </tr>
+      <tr>
+        <td><strong>Agenda</strong></td>
+        <td>TabHeader "Sua agenda" · Calendário mensal table_calendar com markers verdes nos dias com aula · Lista de aulas do dia selecionado · Borda preta no card do calendário</td>
+      </tr>
+      <tr>
+        <td><strong>Mais</strong></td>
+        <td>TabHeader · Card de perfil com avatar + nome + papel · Menu: Perfil · Conversas · Avaliações · Passo a passo · Guia · Suporte · Sair (com confirmação)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Comunicação</h3>
+  <ul class="clean">
+    <li><strong>Chat</strong> realtime (lista + sala de conversa) com bubbles assimétricos, composer, bloqueio</li>
+    <li><strong>Avaliações</strong> recebidas com sumário (nota média + total) e lista de comentários</li>
+    <li><strong>Modal "Sem Sinal"</strong> global com blur + botão "Atualizar"</li>
+  </ul>
+
+  <h3>Arquitetura técnica</h3>
+  <ul class="clean">
+    <li><strong>9 tabelas SQL</strong> modeladas no Supabase (profiles · instructors · students · availability · bookings · conversations · messages · chat_blocks · reviews)</li>
+    <li><strong>6 repositórios abstratos</strong> com mocks completos · seed data realista (1 instrutor, 3 alunos, 4 bookings, 2 conversas, 1 review)</li>
+    <li><strong>21 componentes</strong> do design system (botões, inputs, containers, feedback, display) + TabHeader compartilhado</li>
+    <li><strong>flutter_animate</strong> + <strong>phosphor_flutter</strong> + <strong>flutter_svg</strong> + <strong>table_calendar</strong> + <strong>shared_preferences</strong> para sessão persistente</li>
+    <li><strong>Riverpod</strong> com providers compartilhados em <code>home_providers.dart</code> para reatividade entre abas</li>
+    <li><strong>go_router</strong> com 13 rotas, todas usando <code>_fadeSlidePage</code> custom transition</li>
+  </ul>
+</div>
+
+<!-- 3. INFRAESTRUTURA -->
+<div class="page">
+  <span class="section-eyebrow">03 · Infraestrutura</span>
+  <h2>CI/CD e Repositório</h2>
+
+  <h3>Pipeline automatizado</h3>
+  <div class="three-col">
+    <div class="card">
+      <h4>GitHub</h4>
+      <p style="font-size:9pt;">Repo público em <code>github.com/cnhja0/cnhhj</code>. 14 commits versionados.</p>
+    </div>
+    <div class="card">
+      <h4>Codemagic</h4>
+      <p style="font-size:9pt;">Builda APK Android no Mac M2 a cada push. ~10 min por build. APK chega por e-mail.</p>
+    </div>
+    <div class="card">
+      <h4>GitHub Actions</h4>
+      <p style="font-size:9pt;">Builda Flutter Web e publica em GitHub Pages a cada push. Para iPhone via Safari.</p>
+    </div>
+  </div>
+
+  <h3>Histórico de commits</h3>
+  <div class="commit-list">
+    <table>
+      <thead><tr><th style="width:18%">Hash</th><th>Mensagem</th></tr></thead>
+      <tbody>
+        <tr><td><span class="hash">3e0e8e6</span></td><td>feat(ui): TabHeader unificado + reatividade + bordas pretas + fix logo</td></tr>
+        <tr><td><span class="hash">c548742</span></td><td>fix(layout,lesson): cards da Home não cortarem + remover mínimo R$50</td></tr>
+        <tr><td><span class="hash">ae3f2cd</span></td><td>feat(ui): polimento UI v2 — transições, animações, Phosphor, sessão persistente</td></tr>
+        <tr><td><span class="hash">82c60b4</span></td><td>feat(home): nova aba Home (dashboard) + remover Financeiro</td></tr>
+        <tr><td><span class="hash">c539f30</span></td><td>style(cards): sombra suave em duas camadas</td></tr>
+        <tr><td><span class="hash">edcfd45</span></td><td>style(nav): bottom nav flutuante animada com indicador circular</td></tr>
+        <tr><td><span class="hash">e29835f</span></td><td>fix(login): navegar para Home após login bem-sucedido</td></tr>
+        <tr><td><span class="hash">facb590</span></td><td>fix(env): evitar NotInitializedError do dotenv</td></tr>
+        <tr><td><span class="hash">977e2e2</span></td><td>fix(build): remover .env de assets</td></tr>
+        <tr><td><span class="hash">2e81fa2</span></td><td>fix(theme): usar CardThemeData (CardTheme removido)</td></tr>
+        <tr><td><span class="hash">7b13264</span></td><td>fix(deps): atualizar intl para ^0.20.2</td></tr>
+        <tr><td><span class="hash">060fca1</span></td><td>fix(ci): trocar instance_type linux_x2 por mac_mini_m2</td></tr>
+        <tr><td><span class="hash">725e70c</span></td><td>ci(web): adicionar workflow GitHub Actions para deploy Web</td></tr>
+        <tr><td><span class="hash">9a8e1cd</span></td><td>feat: estrutura inicial do app CNHhj Instrutor (MVP)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Skills Claude Code instaladas</h3>
+  <p>16 skills em <code>.claude/skills/</code> aceleram features futuras:</p>
+  <ul class="clean">
+    <li><strong>flutter-tester</strong> · padrões Riverpod, widget tests, integration tests com Given-When-Then</li>
+    <li><strong>flutter-craft</strong> · workflow brainstorm → plan → execute → verify → debug com 14 skills</li>
+    <li><strong>flutter-code-reviewer / flutter-dart-specialist</strong> · 2 agentes especializados</li>
+    <li>4 comandos slash: <code>/brainstorm</code> <code>/plan</code> <code>/execute</code> <code>/init</code></li>
+  </ul>
+</div>
+
+<!-- 4. PRÓXIMO PASSO: EDIÇÃO DE PERFIL -->
+<div class="page">
+  <span class="section-eyebrow">04 · Próximo Passo</span>
+  <h2>Prioridade #1: Página de Edição de Perfil</h2>
+
+  <div class="priority-box">
+    <h4>★ Próxima implementação imediata</h4>
+    <p>A aba MAIS já tem o item "Perfil" no menu, mas atualmente leva a um <strong>TODO</strong>. A próxima task é construir essa tela.</p>
+  </div>
+
+  <h3>Spec funcional</h3>
+  <p>A tela permite ao instrutor editar seus dados pessoais e profissionais. Deve ser acessível por:</p>
+  <ul class="clean dot">
+    <li>Toque no item "Perfil" na aba MAIS</li>
+    <li>Toque no avatar/header da aba MAIS (futuro: também no avatar da Home)</li>
+  </ul>
+
+  <h3>Campos editáveis</h3>
+  <table class="specs-table">
+    <thead>
+      <tr><th>Campo</th><th>Tipo</th><th>Validação</th><th>Origem</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Foto de perfil</td><td>Upload (câmera/galeria)</td><td>Opcional</td><td>profiles.avatar_url</td></tr>
+      <tr><td>Nome completo</td><td>Texto</td><td>Mín. 3 chars</td><td>profiles.full_name</td></tr>
+      <tr><td>CPF</td><td>Texto com máscara</td><td>11 dígitos válidos</td><td>profiles.cpf</td></tr>
+      <tr><td>Data de nascimento</td><td>Date picker</td><td>Maior de 18 anos</td><td>profiles.birth_date</td></tr>
+      <tr><td>Sexo</td><td>Dropdown</td><td>Opcional</td><td>profiles.gender</td></tr>
+      <tr><td>Telefone</td><td>Texto com máscara</td><td>10 ou 11 dígitos</td><td>profiles.phone</td></tr>
+      <tr><td>Bio profissional</td><td>Textarea (até 280 chars)</td><td>Opcional</td><td>profiles.bio</td></tr>
+      <tr><td>Cidade · UF</td><td>Texto + Dropdown</td><td>Opcional</td><td>instructors.city / state</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Layout planejado</h3>
+  <div class="card">
+    <h4>Estrutura visual</h4>
+    <ul class="clean arrow" style="font-size:9pt;">
+      <li>AppBar com botão "Voltar" + título "Editar perfil"</li>
+      <li>Avatar grande centralizado com botão circular preto sobreposto (ícone câmera) para trocar foto</li>
+      <li>Cards agrupando: <strong>Dados pessoais</strong>, <strong>Contato</strong>, <strong>Sobre você</strong></li>
+      <li>Botão Salvar no rodapé fixo (sticky) com scale-on-press</li>
+      <li>Botão "Cancelar" secundário ao lado do Salvar</li>
+      <li>Indicador de "alterações não salvas" se o usuário sair sem salvar</li>
+    </ul>
+  </div>
+
+  <h3>Aspectos técnicos</h3>
+  <ul class="clean">
+    <li><strong>Arquivo:</strong> <code>lib/features/profile/profile_edit_screen.dart</code></li>
+    <li><strong>Controller:</strong> <code>profile_edit_controller.dart</code> com Riverpod (Notifier)</li>
+    <li><strong>Rota:</strong> <code>/profile/edit</code> em <code>AppRoutes.profileEdit</code> (já existe a constante)</li>
+    <li><strong>Repositório:</strong> <code>InstructorRepository.updateProfile()</code> (já implementado no mock)</li>
+    <li><strong>Após salvar:</strong> invalidar <code>currentInstructorProvider</code> + Profile provider — Home reflete o nome novo</li>
+    <li><strong>Foto:</strong> <code>CnhhjPhotoPicker</code> já existe; reutilizar</li>
+    <li><strong>Componentes:</strong> CnhhjTextField, CnhhjDateField, CnhhjDropdown, CnhhjAvatar, CnhhjPrimaryButton, CnhhjSecondaryButton, TabHeader (modo "Editar")</li>
+  </ul>
+
+  <h3>Estimativa</h3>
+  <div class="hero">
+    <p><strong>~2 horas</strong> de implementação · ~250 linhas Dart · Não bloqueia outras frentes</p>
+  </div>
+</div>
+
+<!-- 5. ROADMAP -->
+<div class="page">
+  <span class="section-eyebrow">05 · Roadmap</span>
+  <h2>Próximos Passos Detalhados</h2>
+
+  <div class="timeline">
+    <div class="timeline-item now">
+      <span class="when">1ª prioridade — esta semana</span>
+      <div class="what">Página de Edição de Perfil</div>
+      <div class="detail">Implementar conforme spec na seção anterior. Acesso via MAIS → Perfil. Reaproveita CnhhjPhotoPicker, todos os inputs do design system, e o repositório de Instructor já existente.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">2ª — esta semana</span>
+      <div class="what">Polimento UI restante (Chat e Wizard)</div>
+      <div class="detail">Aplicar Phosphor icons + animações nas telas que ainda usam Material padrão: chat_list_screen, chat_room_screen, todos os 7 passos do wizard de cadastro inicial. ~1h de trabalho.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">3ª — próxima semana</span>
+      <div class="what">Testes unitários e de widget</div>
+      <div class="detail">Aproveitar a skill <code>flutter-tester</code> instalada para escrever cobertura mínima: 1) auth controllers · 2) onboarding draft · 3) repositórios mock. Padrão Given-When-Then. ~1 dia.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">4ª — semana 3</span>
+      <div class="what">Deploy Flutter Web no GitHub Pages</div>
+      <div class="detail">Workflow já criado. Falta: tornar o repo público (ou usar Cloudflare Pages para repo privado). URL final: <code>cnhja0.github.io/cnhhj</code>. Permite que você (iPhone) também teste o app via Safari.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">5ª — semana 3</span>
+      <div class="what">RLS Supabase + Integração Real</div>
+      <div class="detail">Escrever <code>migration 0002_rls_policies.sql</code> com policies por tabela. Implementar 6 <code>Supabase*Repository</code> equivalentes aos mocks. Trocar <code>APP_MODE=supabase</code> no .env. ~3 dias.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">6ª — semanas 4-6</span>
+      <div class="what">App do Aluno (Fase 2)</div>
+      <div class="detail">Reutiliza models, design system, repositórios. Telas novas: busca de instrutores próximos · perfil detalhado · agendamento · chat · avaliação. Estimativa: 50% do tempo do app do Instrutor pois fundação já existe. ~2-3 semanas.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">7ª — semanas 7+</span>
+      <div class="what">Aquisição de Oferta em Guarulhos</div>
+      <div class="detail">Meta: 5 instrutores cadastrados antes de divulgar para alunos. Selo "Parceiro Fundador". Marketing local via boca a boca, Instagram, WhatsApp. Acompanhamento manual da onboarding.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">Fase 2 — Q4 2026</span>
+      <div class="what">Web para Autoescolas e Clínicas + Pagamentos</div>
+      <div class="detail">Painel Next.js para autoescolas (gestão de instrutores e alunos) e para clínicas (oferta de exames psicotécnicos). Integração Pagar.me para split 20%. Plano VIP R$19,90/mês.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. RISCOS / DECISÕES -->
+<div class="page">
+  <span class="section-eyebrow">06 · Decisões</span>
+  <h2>Pendências e Pedidos</h2>
+
+  <h3>Decisões esperando do sócio</h3>
+  <table>
+    <thead><tr><th>Item</th><th>Status</th><th>Impacto</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Repo público vs privado</td>
+        <td><span class="badge pending">Pendente</span></td>
+        <td>Bloqueia deploy Web grátis no GitHub Pages</td>
+      </tr>
+      <tr>
+        <td>Conta Apple Developer (USD 99/ano)</td>
+        <td><span class="badge future">Futuro</span></td>
+        <td>Sem isso não roda IPA em iPhone real</td>
+      </tr>
+      <tr>
+        <td>Conta Google Play Developer (USD 25)</td>
+        <td><span class="badge future">Futuro</span></td>
+        <td>Sem isso não publica APK na Play Store</td>
+      </tr>
+      <tr>
+        <td>Registro de marca CNHhj</td>
+        <td><span class="badge pending">Pendente</span></td>
+        <td>Proteção legal antes do lançamento</td>
+      </tr>
+      <tr>
+        <td>Estrutura jurídica (MEI vs LTDA)</td>
+        <td><span class="badge pending">Pendente</span></td>
+        <td>Pré-requisito para cobrar e emitir nota</td>
+      </tr>
+      <tr>
+        <td>Lista dos primeiros 5 instrutores de Guarulhos</td>
+        <td><span class="badge pending">Pendente</span></td>
+        <td>Crítico para resolver o problema do "ovo e galinha"</td>
+      </tr>
+      <tr>
+        <td>Termos de Uso + Política de Privacidade</td>
+        <td><span class="badge pending">Pendente</span></td>
+        <td>Obrigatório antes da Play Store</td>
+      </tr>
+      <tr>
+        <td>Orçamento marketing inicial</td>
+        <td><span class="badge pending">Pendente</span></td>
+        <td>Sugerido R$50/dia em Meta Ads, fase de demanda</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Custos previstos para o lançamento</h3>
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Custo</th><th>Quando</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Google Play Developer (uma vez)</td><td>USD 25</td><td>Antes de publicar Android</td></tr>
+      <tr><td>Apple Developer (anual)</td><td>USD 99/ano</td><td>Quando lançar iOS</td></tr>
+      <tr><td>Domínio cnhhj.com.br</td><td>~R$ 40/ano</td><td>Imediato</td></tr>
+      <tr><td>Registro INPI da marca</td><td>~R$ 350</td><td>Antes do lançamento</td></tr>
+      <tr><td>Supabase Pro (depois de free tier)</td><td>USD 25/mês</td><td>~50k usuários ativos</td></tr>
+      <tr><td>Marketing Meta Ads</td><td>R$ 50/dia (sugerido)</td><td>Fase de demanda</td></tr>
+    </tbody>
+  </table>
+
+  <h3>O que está rodando sozinho (automatizado)</h3>
+  <ul class="clean">
+    <li>Push no GitHub → Codemagic builda APK em 10 min → e-mail com link de download</li>
+    <li>Push no GitHub → GitHub Actions builda Flutter Web → publica em GitHub Pages</li>
+    <li>Hot-fix de bug → commit + push → APK novo automaticamente</li>
+    <li>Versionamento Git mantém histórico completo das mudanças</li>
+  </ul>
+
+  <div class="quote">
+    "A infraestrutura está madura: cada hot-fix vira APK em ~10 minutos sem ação manual. Estamos prontos para escalar features e capturar feedback rapidamente."
+  </div>
+</div>
+
+<!-- 7. FECHAMENTO -->
+<div class="page">
+  <span class="section-eyebrow">07 · Fechamento</span>
+  <h2>Onde Estamos e Para Onde Vamos</h2>
+
+  <h3>Sentimento geral do projeto</h3>
+  <div class="hero">
+    <p>App tecnicamente sólido, UI consistente e profissional, infraestrutura automatizada, e arquitetura preparada para o app do Aluno. <strong>Estamos no momento ideal para começar a captação dos primeiros instrutores em Guarulhos.</strong></p>
+  </div>
+
+  <h3>Resumo de 1 minuto para o sócio</h3>
+  <ul class="clean">
+    <li><strong>App do Instrutor: pronto</strong>, com fluxo completo (cadastro → agenda → chat → avaliações) rodando em mock</li>
+    <li><strong>Visual: polido v2</strong>, com bottom nav flutuante, transições suaves, identidade CNHhj aplicada consistente</li>
+    <li><strong>Build automatizado</strong>: cada push gera APK Android instalável no celular em 10 minutos</li>
+    <li><strong>Próximo passo imediato</strong>: página de edição de perfil (~2h)</li>
+    <li><strong>Próximas semanas</strong>: testes, web deploy, integração Supabase real, app do Aluno</li>
+    <li><strong>Custos até hoje</strong>: R$ 0 (free tiers de todos os serviços)</li>
+  </ul>
+
+  <div class="highlight-box">
+    <p>O <strong>tempo investido até aqui</strong> não pode ser refeito pela concorrência sem o mesmo trabalho. Cada semana que demoramos a captar os primeiros 5 instrutores é uma janela que outro pode aproveitar. <strong>O técnico está pronto — o gargalo agora é estratégia de aquisição.</strong></p>
+  </div>
+
+  <h3>Convite para a próxima reunião</h3>
+  <p>Quando você instalar o APK novo no Android (chegando após o commit <code>3e0e8e6</code>), proponho uma chamada de 15 min para:</p>
+  <ul class="clean arrow">
+    <li>Demo presencial do fluxo completo no celular do sócio</li>
+    <li>Decisão sobre repo público vs Cloudflare Pages para web</li>
+    <li>Definir lista preliminar dos 5 primeiros instrutores a abordar</li>
+    <li>Alinhar próximos 14 dias (perfil + testes + web + Supabase)</li>
+  </ul>
+
+  <div style="margin-top: 10mm; padding: 6mm; background: #FFD000; border-radius: 6px; text-align: center;">
+    <p style="font-size: 13pt; font-weight: 900; margin: 0;">CNHhj — Sua CNH começa aqui.</p>
+    <p style="font-size: 9pt; margin: 2mm 0 0 0;">Relatório v2 · 13 de Maio de 2026 · Versão 0.2.0</p>
+  </div>
+</div>
+
+</body>
+</html>

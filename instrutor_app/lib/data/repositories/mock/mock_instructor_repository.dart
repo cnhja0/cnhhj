@@ -49,6 +49,9 @@ class MockInstructorRepository implements InstructorRepository {
   Future<Profile> updateProfile(
     String id, {
     String? fullName,
+    String? cpf,
+    DateTime? birthDate,
+    Gender? gender,
     String? phone,
     String? avatarUrl,
   }) async {
@@ -59,6 +62,9 @@ class MockInstructorRepository implements InstructorRepository {
     }
     final Profile updated = current.copyWith(
       fullName: fullName,
+      cpf: cpf,
+      birthDate: birthDate,
+      gender: gender,
       phone: phone,
       avatarUrl: avatarUrl,
       updatedAt: DateTime.now(),
