@@ -39,3 +39,4 @@ export 'display/cnhhj_badge.dart';
 // ─── Brand ───────────────────────────────────────────────────────────
 export 'cnhhj_logo.dart';
 export 'onboarding_progress_bar.dart';
+export 'tab_header.dart';

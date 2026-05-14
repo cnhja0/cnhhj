@@ -59,10 +59,15 @@ class TabMore extends ConsumerWidget {
     ];
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
       child: ListView(
         physics: const BouncingScrollPhysics(),
         children: <Widget>[
+          const TabHeader(
+            title: 'Mais',
+            subtitle: 'Configurações, suporte e ajuda',
+          ),
+          const SizedBox(height: 14),
           const _UserHeader()
               .animate()
               .fadeIn(duration: 300.ms)

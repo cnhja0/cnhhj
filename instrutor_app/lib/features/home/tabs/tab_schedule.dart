@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -33,81 +34,103 @@ class _TabScheduleState extends ConsumerState<TabSchedule> {
         ref.watch(_confirmedProvider(userId));
 
     return CnhhjScaffold(
-      // Padding bottom alto para o conteúdo não ficar atrás da bottom nav.
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
-      child: async.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.textPrimary),
-        ),
-        error: (Object err, _) => Center(child: Text('Erro: $err')),
-        data: (List<Booking> bookings) {
-          final Map<DateTime, List<Booking>> byDay = _groupByDay(bookings);
-          final DateTime keyDay = _selected ?? _focused;
-          final DateTime normalized =
-              DateTime(keyDay.year, keyDay.month, keyDay.day);
-          final List<Booking> dayItems =
-              byDay[normalized] ?? const <Booking>[];
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          TabHeader(
+            title: 'Sua agenda',
+            subtitle: async.value == null
+                ? null
+                : '${async.value!.where((Booking b) => b.status == BookingStatus.confirmed).length} '
+                    'aula(s) confirmada(s)',
+          ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: async.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.textPrimary),
+              ),
+              error: (Object err, _) => Center(child: Text('Erro: $err')),
+              data: (List<Booking> bookings) {
+                final Map<DateTime, List<Booking>> byDay =
+                    _groupByDay(bookings);
+                final DateTime keyDay = _selected ?? _focused;
+                final DateTime normalized =
+                    DateTime(keyDay.year, keyDay.month, keyDay.day);
+                final List<Booking> dayItems =
+                    byDay[normalized] ?? const <Booking>[];
 
-          return Column(
-            children: <Widget>[
-              CnhhjCard(
-                padding: const EdgeInsets.all(8),
-                child: TableCalendar<Booking>(
-                  locale: 'pt_BR',
-                  firstDay: DateTime.utc(2024, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  focusedDay: _focused,
-                  selectedDayPredicate: (DateTime d) =>
-                      _selected != null && isSameDay(_selected, d),
-                  eventLoader: (DateTime d) =>
-                      byDay[DateTime(d.year, d.month, d.day)] ??
-                      const <Booking>[],
-                  onDaySelected: (DateTime sel, DateTime focused) {
-                    setState(() {
-                      _selected = sel;
-                      _focused = focused;
-                    });
-                  },
-                  calendarStyle: const CalendarStyle(
-                    todayDecoration: BoxDecoration(
-                      color: AppColors.primaryLighter,
-                      shape: BoxShape.circle,
-                    ),
-                    todayTextStyle: TextStyle(color: AppColors.textPrimary),
-                    selectedDecoration: BoxDecoration(
-                      color: AppColors.textPrimary,
-                      shape: BoxShape.circle,
-                    ),
-                    selectedTextStyle: TextStyle(color: AppColors.surface),
-                    markerDecoration: BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  headerStyle: const HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: dayItems.isEmpty
-                    ? const CnhhjEmptyState(
-                        icon: Icons.event_available_outlined,
-                        message: 'Sem aulas neste dia.',
-                      )
-                    : ListView.separated(
-                        itemCount: dayItems.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (BuildContext c, int i) =>
-                            _BookingTile(booking: dayItems[i]),
+                return Column(
+                  children: <Widget>[
+                    CnhhjCard(
+                      padding: const EdgeInsets.all(8),
+                      border: Border.all(
+                        color: AppColors.textPrimary,
+                        width: 1.5,
                       ),
-              ),
-            ],
-          );
-        },
+                      child: TableCalendar<Booking>(
+                        locale: 'pt_BR',
+                        firstDay: DateTime.utc(2024, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _focused,
+                        selectedDayPredicate: (DateTime d) =>
+                            _selected != null && isSameDay(_selected, d),
+                        eventLoader: (DateTime d) =>
+                            byDay[DateTime(d.year, d.month, d.day)] ??
+                            const <Booking>[],
+                        onDaySelected: (DateTime sel, DateTime focused) {
+                          setState(() {
+                            _selected = sel;
+                            _focused = focused;
+                          });
+                        },
+                        calendarStyle: const CalendarStyle(
+                          todayDecoration: BoxDecoration(
+                            color: AppColors.primaryLighter,
+                            shape: BoxShape.circle,
+                          ),
+                          todayTextStyle:
+                              TextStyle(color: AppColors.textPrimary),
+                          selectedDecoration: BoxDecoration(
+                            color: AppColors.textPrimary,
+                            shape: BoxShape.circle,
+                          ),
+                          selectedTextStyle:
+                              TextStyle(color: AppColors.surface),
+                          markerDecoration: BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        headerStyle: const HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: dayItems.isEmpty
+                          ? const CnhhjEmptyState(
+                              icon: PhosphorIconsDuotone.calendarBlank,
+                              message: 'Sem aulas neste dia.',
+                            )
+                          : ListView.separated(
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: dayItems.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 10),
+                              itemBuilder: (BuildContext c, int i) =>
+                                  _BookingTile(booking: dayItems[i]),
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -166,7 +189,7 @@ class _BookingTile extends StatelessWidget {
                   '${hf.format(booking.scheduledStart)} — ${hf.format(booking.scheduledEnd)}',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 Text(

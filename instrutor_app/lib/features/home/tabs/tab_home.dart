@@ -8,36 +8,44 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../data/models/booking.dart';
-import '../../../data/models/enums.dart';
 import '../../../data/models/instructor.dart';
 import '../../../data/models/profile.dart';
 import '../../../data/providers.dart';
-import '../../../data/repositories/mock/_seed.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../home_providers.dart';
 import '../home_state.dart';
 
 /// Aba HOME — dashboard com saudação, indicadores principais e grid
 /// de acesso rápido para as outras funcionalidades.
+///
+/// Lê todos os indicadores dos providers compartilhados em
+/// [home_providers.dart] — quando outra aba invalida um deles
+/// (ex: TabLesson após salvar), esta tela se atualiza automaticamente.
 class TabHome extends ConsumerWidget {
   const TabHome({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String userId =
-        ref.watch(authRepositoryProvider).currentSession?.userId ??
-            MockState.currentInstructorId;
-
     final AsyncValue<Profile?> profileAsync =
         ref.watch(_currentProfileProvider);
     final AsyncValue<Instructor?> instructorAsync =
-        ref.watch(_instructorProvider(userId));
+        ref.watch(currentInstructorProvider);
     final AsyncValue<int> pendingCount =
-        ref.watch(_pendingCountProvider(userId));
+        ref.watch(pendingBookingsCountProvider);
     final AsyncValue<int> confirmedCount =
-        ref.watch(_confirmedCountProvider(userId));
+        ref.watch(confirmedBookingsCountProvider);
     final AsyncValue<int> conversationsCount =
-        ref.watch(_conversationsCountProvider(userId));
+        ref.watch(conversationsCountProvider);
+
+    final DateTime now = DateTime.now();
+    final String greeting = switch (now.hour) {
+      < 12 => 'Bom dia',
+      < 18 => 'Boa tarde',
+      _ => 'Boa noite',
+    };
+    final String first = (profileAsync.value?.fullName ?? '').split(' ').first;
+    final String dateLabel =
+        DateFormat("EEEE, dd 'de' MMMM", 'pt_BR').format(now);
 
     final List<_QuickAction> actions = <_QuickAction>[
       _QuickAction(
@@ -81,60 +89,51 @@ class TabHome extends ConsumerWidget {
     ];
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            _Header(name: profileAsync.value?.fullName)
+            TabHeader(
+              title: '$greeting${first.isEmpty ? '' : ', $first'}!',
+              subtitle:
+                  dateLabel[0].toUpperCase() + dateLabel.substring(1),
+            )
                 .animate()
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: -0.1, end: 0, curve: Curves.easeOutCubic),
-            const SizedBox(height: 18),
-            _StatsRow(
+            const SizedBox(height: 14),
+            _StatsCard(
               instructor: instructorAsync.value,
               confirmed: confirmedCount.value ?? 0,
             )
                 .animate()
                 .fadeIn(delay: 100.ms, duration: 350.ms)
                 .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
-            const SizedBox(height: 28),
-            Text(
-              'Acesso rápido',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-                letterSpacing: 0.8,
-              ),
-            ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              // Cards mais "horizontais" (1.25 = wider than tall) pra
-              // 3 fileiras caberem na tela acima do bottom nav flutuante.
-              childAspectRatio: 1.25,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1.15,
               children: <Widget>[
                 for (int i = 0; i < actions.length; i++)
                   _HomeCard(action: actions[i])
                       .animate()
                       .fadeIn(
-                        delay: (250 + i * 80).ms,
+                        delay: (200 + i * 70).ms,
                         duration: 350.ms,
                       )
                       .slideY(
-                        begin: 0.15,
+                        begin: 0.12,
                         end: 0,
                         curve: Curves.easeOutCubic,
                       ),
               ],
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -142,7 +141,6 @@ class TabHome extends ConsumerWidget {
   }
 }
 
-// ─── Modelo de Quick Action ──────────────────────────────────────────
 class _QuickAction {
   const _QuickAction({
     required this.icon,
@@ -159,7 +157,8 @@ class _QuickAction {
   final VoidCallback? onTap;
 }
 
-// ─── Providers locais ────────────────────────────────────────────────
+// Profile provider local (não compartilhado, já está em home_providers o
+// resto). Mantido aqui pois só TabHome consome.
 final FutureProvider<Profile?> _currentProfileProvider =
     FutureProvider<Profile?>((Ref ref) async {
   try {
@@ -169,130 +168,62 @@ final FutureProvider<Profile?> _currentProfileProvider =
   }
 });
 
-final FutureProviderFamily<Instructor?, String> _instructorProvider =
-    FutureProvider.family<Instructor?, String>((Ref ref, String userId) {
-  return ref.watch(instructorRepositoryProvider).getById(userId);
-});
-
-final FutureProviderFamily<int, String> _pendingCountProvider =
-    FutureProvider.family<int, String>((Ref ref, String userId) async {
-  final List<Booking> b = await ref
-      .watch(bookingRepositoryProvider)
-      .listByStatus(userId, BookingStatus.pending);
-  return b.length;
-});
-
-final FutureProviderFamily<int, String> _confirmedCountProvider =
-    FutureProvider.family<int, String>((Ref ref, String userId) async {
-  final List<Booking> b = await ref
-      .watch(bookingRepositoryProvider)
-      .listByStatus(userId, BookingStatus.confirmed);
-  return b.length;
-});
-
-final FutureProviderFamily<int, String> _conversationsCountProvider =
-    FutureProvider.family<int, String>((Ref ref, String userId) async {
-  final List<dynamic> c =
-      await ref.watch(chatRepositoryProvider).listConversations(userId);
-  return c.length;
-});
-
-// ─── Header (saudação + data) ────────────────────────────────────────
-class _Header extends StatelessWidget {
-  const _Header({this.name});
-  final String? name;
-
-  @override
-  Widget build(BuildContext context) {
-    final DateTime now = DateTime.now();
-    final String greeting = switch (now.hour) {
-      < 12 => 'Bom dia',
-      < 18 => 'Boa tarde',
-      _ => 'Boa noite',
-    };
-    final String first = (name ?? '').split(' ').first;
-    final String dateLabel =
-        DateFormat("EEEE, dd 'de' MMMM", 'pt_BR').format(now);
-
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                '$greeting${first.isEmpty ? '' : ', $first'}!',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
-                  height: 1.1,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                dateLabel[0].toUpperCase() + dateLabel.substring(1),
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const CnhhjLogo(size: 38, iconOnly: true),
-      ],
-    );
-  }
-}
-
-// ─── Stats Row (3 chips) ─────────────────────────────────────────────
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({this.instructor, this.confirmed = 0});
+// ─── Card único de stats (3 chips horizontais com divisores) ─────────
+class _StatsCard extends StatelessWidget {
+  const _StatsCard({this.instructor, this.confirmed = 0});
   final Instructor? instructor;
   final int confirmed;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: _Stat(
-            icon: PhosphorIconsDuotone.star,
-            label: 'Sua nota',
-            value: (instructor?.averageRating ?? 0).toStringAsFixed(1),
+    final bool isActive = instructor?.isActive ?? false;
+    return CnhhjCard(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      border: Border.all(color: AppColors.textPrimary, width: 1.5),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: _StatChip(
+              icon: PhosphorIconsDuotone.star,
+              label: 'Nota',
+              value: (instructor?.averageRating ?? 0).toStringAsFixed(1),
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _Stat(
-            icon: PhosphorIconsDuotone.calendarCheck,
-            label: 'Aulas',
-            value: '$confirmed',
+          const _VerticalDivider(),
+          Expanded(
+            child: _StatChip(
+              icon: PhosphorIconsDuotone.calendarCheck,
+              label: 'Aulas',
+              value: '$confirmed',
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _Stat(
-            icon: (instructor?.isActive ?? false)
-                ? PhosphorIconsFill.circle
-                : PhosphorIconsRegular.circle,
-            label: 'Status',
-            value: (instructor?.isActive ?? false) ? 'On' : 'Off',
-            valueColor: (instructor?.isActive ?? false)
-                ? AppColors.success
-                : AppColors.textMuted,
+          const _VerticalDivider(),
+          Expanded(
+            child: _StatChip(
+              icon: isActive
+                  ? PhosphorIconsFill.circle
+                  : PhosphorIconsRegular.circle,
+              label: 'Status',
+              value: isActive ? 'On' : 'Off',
+              valueColor:
+                  isActive ? AppColors.success : AppColors.textMuted,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({
+class _VerticalDivider extends StatelessWidget {
+  const _VerticalDivider();
+  @override
+  Widget build(BuildContext context) =>
+      Container(width: 1, height: 32, color: AppColors.divider);
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
     required this.icon,
     required this.label,
     required this.value,
@@ -306,41 +237,34 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CnhhjCard(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      child: Column(
-        children: <Widget>[
-          Icon(
-            icon,
-            size: 22,
+    return Column(
+      children: <Widget>[
+        Icon(icon, size: 18, color: valueColor ?? AppColors.textPrimary),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
             color: valueColor ?? AppColors.textPrimary,
+            height: 1.1,
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: valueColor ?? AppColors.textPrimary,
-              height: 1.1,
-            ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
           ),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              color: AppColors.textMuted,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-// ─── Card do grid ────────────────────────────────────────────────────
+// ─── Card do grid (com BORDA PRETA pra quebrar o amarelo) ────────────
 class _HomeCard extends StatelessWidget {
   const _HomeCard({required this.action});
   final _QuickAction action;
@@ -350,6 +274,7 @@ class _HomeCard extends StatelessWidget {
     return CnhhjCard(
       padding: const EdgeInsets.all(14),
       onTap: action.onTap,
+      border: Border.all(color: AppColors.textPrimary, width: 2),
       child: Stack(
         clipBehavior: Clip.none,
         children: <Widget>[
@@ -358,8 +283,8 @@ class _HomeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Container(
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
                 decoration: const BoxDecoration(
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
@@ -367,10 +292,9 @@ class _HomeCard extends StatelessWidget {
                 child: Icon(
                   action.icon,
                   color: AppColors.textPrimary,
-                  size: 22,
+                  size: 24,
                 ),
               ),
-              const SizedBox(height: 8),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -380,11 +304,11 @@ class _HomeCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
-                      height: 1.2,
-                      letterSpacing: -0.2,
+                      height: 1.1,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   if (action.subtitle != null) ...<Widget>[
@@ -396,7 +320,7 @@ class _HomeCard extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -412,10 +336,14 @@ class _HomeCard extends StatelessWidget {
                 width: 24,
                 height: 24,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.error,
                   shape: BoxShape.circle,
-                  boxShadow: <BoxShadow>[
+                  border: Border.all(
+                    color: AppColors.textPrimary,
+                    width: 2,
+                  ),
+                  boxShadow: const <BoxShadow>[
                     BoxShadow(
                       color: Color(0x33000000),
                       blurRadius: 6,
@@ -426,7 +354,7 @@ class _HomeCard extends StatelessWidget {
                 child: Text(
                   '${action.badge}',
                   style: GoogleFonts.poppins(
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
                     color: AppColors.surface,
                   ),

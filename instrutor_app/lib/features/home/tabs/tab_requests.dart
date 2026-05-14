@@ -12,6 +12,7 @@ import '../../../data/models/profile.dart';
 import '../../../data/providers.dart';
 import '../../../data/repositories/mock/_seed.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../home_providers.dart';
 
 /// Aba SOLICITAÇÕES — bookings com status `pending` para o instrutor
 /// confirmar ou recusar.
@@ -27,17 +28,17 @@ class TabRequests extends ConsumerWidget {
         ref.watch(_pendingBookingsProvider(userId));
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          _ScreenHeader(
+          TabHeader(
             title: 'Solicitações',
             subtitle: async.value == null
                 ? null
                 : '${async.value!.length} ${async.value!.length == 1 ? 'pendente' : 'pendentes'}',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Expanded(
             child: async.when(
               loading: () => const Center(
@@ -83,42 +84,6 @@ final FutureProviderFamily<List<Booking>, String> _pendingBookingsProvider =
       .listByStatus(userId, BookingStatus.pending);
 });
 
-class _ScreenHeader extends StatelessWidget {
-  const _ScreenHeader({required this.title, this.subtitle});
-  final String title;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
-            height: 1.1,
-            letterSpacing: -0.5,
-          ),
-        ),
-        if (subtitle != null) ...<Widget>[
-          const SizedBox(height: 2),
-          Text(
-            subtitle!,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
 class _RequestCard extends ConsumerWidget {
   const _RequestCard({required this.booking});
   final Booking booking;
@@ -136,7 +101,11 @@ class _RequestCard extends ConsumerWidget {
                 ? booking.instructorId
                 : null,
           );
+      // Invalida providers locais + da Home para que badges/contadores
+      // atualizem em todas as telas.
       ref.invalidate(_pendingBookingsProvider);
+      ref.invalidate(pendingBookingsCountProvider);
+      ref.invalidate(confirmedBookingsCountProvider);
       if (!context.mounted) return;
       CnhhjSnack.success(
         context,

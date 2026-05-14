@@ -5,8 +5,9 @@ import '../../../core/theme/app_colors.dart';
 /// Card branco padrão do CNHhj: cantos arredondados, **sombra suave**,
 /// padding interno generoso. É o container que aparece sobre o fundo amarelo.
 ///
-/// A sombra dá profundidade e separa visualmente do fundo. Para o card
-/// ficar "flat" (sem sombra), passe `shadow: false`.
+/// Parâmetros opcionais:
+/// - `shadow: false` para card "flat" (sem profundidade).
+/// - `border` para borda customizada (ex: contorno preto nos cards do grid).
 class CnhhjCard extends StatelessWidget {
   const CnhhjCard({
     super.key,
@@ -17,6 +18,7 @@ class CnhhjCard extends StatelessWidget {
     this.borderRadius = 20,
     this.shadow = true,
     this.backgroundColor = AppColors.surface,
+    this.border,
   });
 
   final Widget child;
@@ -26,6 +28,7 @@ class CnhhjCard extends StatelessWidget {
   final double borderRadius;
   final bool shadow;
   final Color backgroundColor;
+  final BoxBorder? border;
 
   @override
   Widget build(BuildContext context) {
@@ -42,24 +45,25 @@ class CnhhjCard extends StatelessWidget {
       ),
     );
 
-    if (shadow) {
+    if (shadow || border != null) {
       card = DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: radius,
-          boxShadow: const <BoxShadow>[
-            // Sombra principal (suave, larga)
-            BoxShadow(
-              color: Color(0x14000000), // ~8% preto
-              blurRadius: 16,
-              offset: Offset(0, 6),
-            ),
-            // Sombra de aproximação (curta, faz "tocar" o fundo)
-            BoxShadow(
-              color: Color(0x0A000000), // ~4% preto
-              blurRadius: 4,
-              offset: Offset(0, 1),
-            ),
-          ],
+          border: border,
+          boxShadow: shadow
+              ? const <BoxShadow>[
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 16,
+                    offset: Offset(0, 6),
+                  ),
+                  BoxShadow(
+                    color: Color(0x0A000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ]
+              : null,
         ),
         child: card,
       );

@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/enums.dart';
 import '../../../data/models/instructor.dart';
 import '../../../data/providers.dart';
-import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/instructor_repository.dart';
-import '../../../data/repositories/mock/_seed.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../home_providers.dart';
 
-/// Aba AULA — configurar aula que aparece para os alunos.
+/// Aba AULA — configurar a oferta que aparece para os alunos.
 ///
-/// Tela mais densa do app: define se está aceitando aulas, área de atuação,
-/// valor por aula, dias da semana + horário, e mostra pré-visualização
-/// do card que o aluno vai ver.
+/// Switch "Recebendo aulas", área de atuação, valor, dias/horários,
+/// e pré-visualização do card que o aluno verá. A pré-visualização
+/// e o switch são reativos — atualizam ao vivo enquanto o usuário edita.
 class TabLesson extends ConsumerStatefulWidget {
   const TabLesson({super.key});
 
@@ -42,6 +42,11 @@ class _TabLessonState extends ConsumerState<TabLesson> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    // Refresh local _instructor on every keystroke so the preview reflects
+    // o valor digitado mesmo sem salvar.
+    _priceController.addListener(() => setState(() {}));
+    _neighborhoodController.addListener(() => setState(() {}));
+    _cityController.addListener(() => setState(() {}));
   }
 
   @override
@@ -53,7 +58,7 @@ class _TabLessonState extends ConsumerState<TabLesson> {
   }
 
   Future<void> _load() async {
-    final String userId = _currentUserId();
+    final String userId = ref.read(currentUserIdProvider);
     final Instructor? i =
         await ref.read(instructorRepositoryProvider).getById(userId);
     if (!mounted) return;
@@ -68,19 +73,15 @@ class _TabLessonState extends ConsumerState<TabLesson> {
     });
   }
 
-  String _currentUserId() =>
-      ref.read(authRepositoryProvider).currentSession?.userId ??
-      MockState.currentInstructorId;
-
   Future<void> _toggleActive(bool v) async {
     if (_instructor == null) return;
     final String id = _instructor!.id;
     setState(() {
       _instructor = _instructor!.copyWith(isActive: v);
     });
-    await ref
-        .read(instructorRepositoryProvider)
-        .setActive(id, active: v);
+    await ref.read(instructorRepositoryProvider).setActive(id, active: v);
+    // Avisa outras abas (Home dashboard) que o instructor mudou.
+    ref.invalidate(currentInstructorProvider);
   }
 
   Future<void> _save() async {
@@ -100,23 +101,21 @@ class _TabLessonState extends ConsumerState<TabLesson> {
     }
 
     setState(() => _saving = true);
-    final String id = _currentUserId();
+    final String id = ref.read(currentUserIdProvider);
     try {
-      await ref.read(instructorRepositoryProvider).upsert(
-            id,
-            InstructorUpdate(
-              neighborhood: _neighborhoodController.text.trim(),
-              city: _cityController.text.trim(),
-              state: _state,
-              pricePerClass: price,
-            ),
-          );
-
-      // Substitui grade semanal pelos slots selecionados
-      // (no mock, replaceAll do AvailabilityRepository fará o trabalho).
-      // Aqui usamos uma API simplificada: deletar+recriar.
-      // ...
+      final Instructor updated =
+          await ref.read(instructorRepositoryProvider).upsert(
+                id,
+                InstructorUpdate(
+                  neighborhood: _neighborhoodController.text.trim(),
+                  city: _cityController.text.trim(),
+                  state: _state,
+                  pricePerClass: price,
+                ),
+              );
+      ref.invalidate(currentInstructorProvider);
       if (!mounted) return;
+      setState(() => _instructor = updated);
       CnhhjSnack.success(context, 'Configuração salva!');
     } catch (_) {
       if (!mounted) return;
@@ -134,29 +133,61 @@ class _TabLessonState extends ConsumerState<TabLesson> {
       );
     }
     final Instructor inst = _instructor!;
+    final double? livePrice =
+        double.tryParse(_priceController.text.replaceAll(',', '.'));
 
     return CnhhjLoadingOverlay(
       show: _saving,
       message: 'Salvando...',
       child: CnhhjScaffold(
-        // Padding bottom alto para o conteúdo não ficar atrás da
-        // bottom nav flutuante (~84px de nav + buffer).
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
+        // 90 = clear da bottom nav floating (84) + ~6px buffer
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              const TabHeader(
+                title: 'Configurar aula',
+                subtitle: 'Defina disponibilidade, valor e área de atuação',
+              ),
+              const SizedBox(height: 14),
               CnhhjCard(
                 child: Row(
                   children: <Widget>[
+                    Icon(
+                      inst.isActive
+                          ? PhosphorIconsFill.toggleRight
+                          : PhosphorIconsRegular.toggleLeft,
+                      color: inst.isActive
+                          ? AppColors.success
+                          : AppColors.textMuted,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        'Recebendo aulas',
-                        style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Recebendo aulas',
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            inst.isActive
+                                ? 'Você aparece para os alunos'
+                                : 'Sua oferta está pausada',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Switch(
@@ -172,7 +203,7 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    _SectionTitle(label: 'ÁREA DE ATUAÇÃO'),
+                    const _SectionTitle(label: 'ÁREA DE ATUAÇÃO'),
                     const SizedBox(height: 12),
                     CnhhjTextField(
                       controller: _neighborhoodController,
@@ -201,7 +232,7 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    _SectionTitle(label: 'VALOR DA AULA'),
+                    const _SectionTitle(label: 'VALOR DA AULA'),
                     const SizedBox(height: 12),
                     CnhhjTextField(
                       controller: _priceController,
@@ -209,7 +240,7 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      icon: Icons.attach_money,
+                      icon: PhosphorIconsRegular.currencyDollar,
                     ),
                   ],
                 ),
@@ -219,13 +250,14 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    _SectionTitle(label: 'DATAS DISPONÍVEIS PARA DAR AULAS'),
+                    const _SectionTitle(
+                        label: 'DATAS DISPONÍVEIS PARA DAR AULAS'),
                     const SizedBox(height: 12),
                     Text(
                       'Dias da semana',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -243,11 +275,14 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                             }
                           }),
                           borderRadius: BorderRadius.circular(8),
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: sel ? AppColors.primary : AppColors.surface,
+                              color: sel
+                                  ? AppColors.primary
+                                  : AppColors.surface,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: AppColors.textPrimary,
@@ -259,7 +294,7 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                               d.shortLabel,
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w800,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -272,7 +307,7 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                       'Horário',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -305,15 +340,28 @@ class _TabLessonState extends ConsumerState<TabLesson> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    _SectionTitle(label: 'PRÉ-VISUALIZAÇÃO'),
+                    const _SectionTitle(label: 'PRÉ-VISUALIZAÇÃO'),
                     const SizedBox(height: 12),
-                    _PreviewCard(instructor: inst),
+                    _PreviewCard(
+                      instructor: inst,
+                      livePrice: livePrice,
+                      liveNeighborhood:
+                          _neighborhoodController.text.trim().isEmpty
+                              ? null
+                              : _neighborhoodController.text.trim(),
+                      liveCity: _cityController.text.trim().isEmpty
+                          ? null
+                          : _cityController.text.trim(),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              CnhhjPrimaryButton(label: 'Salvar', onPressed: _save),
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
+              CnhhjPrimaryButton(
+                label: 'Salvar',
+                icon: PhosphorIconsRegular.check,
+                onPressed: _save,
+              ),
             ],
           ),
         ),
@@ -331,7 +379,7 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       label,
       style: GoogleFonts.poppins(
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: FontWeight.w900,
         color: AppColors.textPrimary,
         letterSpacing: 0.8,
@@ -364,25 +412,41 @@ class _TimePickerField extends StatelessWidget {
       children: <Widget>[
         Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textMuted),
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 4),
         InkWell(
           onTap: () => _open(context),
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.divider),
             ),
-            child: Text(
-              '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  PhosphorIconsRegular.clock,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -391,19 +455,36 @@ class _TimePickerField extends StatelessWidget {
   }
 }
 
-/// Mini-card mostrando como o aluno verá o instrutor.
+/// Mini-card mostrando como o aluno verá o instrutor. Recebe os valores
+/// LIVE digitados (price, bairro, cidade) — atualiza enquanto o usuário
+/// preenche, antes de salvar.
 class _PreviewCard extends StatelessWidget {
-  const _PreviewCard({required this.instructor});
+  const _PreviewCard({
+    required this.instructor,
+    this.livePrice,
+    this.liveNeighborhood,
+    this.liveCity,
+  });
+
   final Instructor instructor;
+  final double? livePrice;
+  final String? liveNeighborhood;
+  final String? liveCity;
 
   @override
   Widget build(BuildContext context) {
+    final double? price = livePrice ?? instructor.pricePerClass;
+    final String? where = (liveNeighborhood ?? instructor.neighborhood) != null
+        ? '${liveNeighborhood ?? instructor.neighborhood}'
+            '${(liveCity ?? instructor.city) != null ? ' · ${liveCity ?? instructor.city}' : ''}'
+        : null;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.divider),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.textPrimary, width: 1.5),
       ),
       child: Row(
         children: <Widget>[
@@ -416,20 +497,45 @@ class _PreviewCard extends StatelessWidget {
                 Text(
                   'Você (instrutor)',
                   style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 2),
                 CnhhjStars(rating: instructor.averageRating, size: 14),
-                const SizedBox(height: 2),
+                if (where != null) ...<Widget>[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: <Widget>[
+                      const Icon(
+                        PhosphorIconsRegular.mapPin,
+                        size: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          where,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 4),
                 Text(
-                  instructor.pricePerClass == null
+                  price == null || price <= 0
                       ? 'Sem valor definido'
-                      : 'R\$ ${instructor.pricePerClass!.toStringAsFixed(2)}',
+                      : 'R\$ ${price.toStringAsFixed(2)}',
                   style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
                   ),
                 ),
