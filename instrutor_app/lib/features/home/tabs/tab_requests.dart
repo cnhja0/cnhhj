@@ -48,7 +48,7 @@ class TabRequests extends ConsumerWidget {
               data: (List<Booking> items) {
                 if (items.isEmpty) {
                   return const CnhhjEmptyState(
-                    icon: PhosphorIconsDuotone.bellSlash,
+                    icon: PhosphorIconsDuotone.tray,
                     message:
                         'Nenhuma solicitação pendente.\nQuando alunos pedirem aulas, elas aparecem aqui.',
                   );
