@@ -10,6 +10,12 @@ import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/widgets.dart';
 import 'login_controller.dart';
 
+/// Tela de login com animações especiais:
+///
+/// - **Entrada**: logo e card emergem do centro com scale + fade
+/// - **Saída** (após login bem-sucedido): o conteúdo desliza para a direita
+///   acelerando, simultaneamente uma roda de direção atravessa a tela
+///   como um carro em alta velocidade, e só então navega para a Home.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -22,11 +28,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  /// Duração total da animação de saída (slide do conteúdo + carro).
+  static const Duration _exitDuration = Duration(milliseconds: 800);
+
+  /// Quando true, conteúdo desliza pra direita e o carro atravessa a tela.
+  bool _exiting = false;
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _runExitAnimation() async {
+    if (!mounted) return;
+    setState(() => _exiting = true);
+    await Future<void>.delayed(_exitDuration);
+    if (!mounted) return;
+    context.go(AppRoutes.home);
   }
 
   Future<void> _submit() async {
@@ -39,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
     if (!mounted) return;
     if (ok) {
-      context.go(AppRoutes.home);
+      await _runExitAnimation();
     } else {
       final String? err = ref.read(loginControllerProvider).errorMessage;
       if (err != null) CnhhjSnack.error(context, err);
@@ -51,7 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref.read(loginControllerProvider.notifier).signInWithGoogle();
     if (!mounted) return;
     if (ok) {
-      context.go(AppRoutes.home);
+      await _runExitAnimation();
     } else {
       final String? err = ref.read(loginControllerProvider).errorMessage;
       if (err != null) CnhhjSnack.error(context, err);
@@ -63,138 +83,260 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final LoginState state = ref.watch(loginControllerProvider);
 
     return CnhhjLoadingOverlay(
-      show: state.loading,
+      // Esconde o spinner durante a animação de saída — a animação é
+      // o feedback suficiente.
+      show: state.loading && !_exiting,
       message: 'Entrando...',
       child: CnhhjScaffold(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: <Widget>[
-                const SizedBox(height: 24),
-                const CnhhjLogo(size: 72)
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .scaleXY(
-                      begin: 0.9,
-                      end: 1.0,
-                      duration: 400.ms,
-                      curve: Curves.easeOutBack,
+        child: Stack(
+          children: <Widget>[
+            // ─── Conteúdo principal — desliza pra direita ao sair ────
+            AnimatedSlide(
+              duration: _exitDuration,
+              curve: Curves.easeInQuart, // acelera (como carro saindo)
+              offset: _exiting ? const Offset(1.4, 0) : Offset.zero,
+              child: AnimatedOpacity(
+                duration: _exitDuration,
+                opacity: _exiting ? 0.0 : 1.0,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        const SizedBox(height: 24),
+                        // Logo entra com scale + fade do centro
+                        const CnhhjLogo(size: 80)
+                            .animate()
+                            .fadeIn(duration: 500.ms)
+                            .scaleXY(
+                              begin: 0.6,
+                              end: 1.0,
+                              duration: 600.ms,
+                              curve: Curves.easeOutBack,
+                            ),
+                        const SizedBox(height: 22),
+                        const _PromoBanner()
+                            .animate()
+                            .fadeIn(delay: 200.ms, duration: 400.ms)
+                            .scaleXY(
+                              begin: 0.92,
+                              end: 1.0,
+                              delay: 200.ms,
+                              duration: 400.ms,
+                              curve: Curves.easeOutCubic,
+                            ),
+                        const SizedBox(height: 22),
+                        CnhhjCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              Text(
+                                'Faça o login na sua conta',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              CnhhjGoogleSignInButton(
+                                onPressed: _exiting ? null : _googleSignIn,
+                              ),
+                              const SizedBox(height: 14),
+                              CnhhjTextField(
+                                controller: _emailController,
+                                hint: 'Digite seu email',
+                                icon: PhosphorIconsRegular.envelope,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                validator: (String? v) {
+                                  if (v == null || v.trim().isEmpty) {
+                                    return 'Informe o e-mail';
+                                  }
+                                  if (!v.contains('@')) {
+                                    return 'E-mail inválido';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 10),
+                              CnhhjPasswordField(
+                                controller: _passwordController,
+                                hint: 'Digite sua senha',
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _submit(),
+                                validator: (String? v) {
+                                  if (v == null || v.isEmpty) {
+                                    return 'Informe a senha';
+                                  }
+                                  if (v.length < 6) {
+                                    return 'A senha precisa ter pelo menos 6 caracteres';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: CnhhjTextLink(
+                                  label: 'Esqueci minha senha',
+                                  fontSize: 12,
+                                  onPressed: () {
+                                    // TODO: rota de recuperação de senha
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              CnhhjPrimaryButton(
+                                label: 'Entrar',
+                                icon: PhosphorIconsRegular.signIn,
+                                onPressed: _exiting ? null : _submit,
+                              ),
+                              const SizedBox(height: 12),
+                              Center(
+                                child: CnhhjTextLink(
+                                  label: 'Políticas de Privacidade',
+                                  fontSize: 12,
+                                  onPressed: () {
+                                    // TODO: abrir tela/url de políticas
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                            .animate()
+                            .fadeIn(delay: 350.ms, duration: 450.ms)
+                            .scaleXY(
+                              begin: 0.94,
+                              end: 1.0,
+                              delay: 350.ms,
+                              duration: 450.ms,
+                              curve: Curves.easeOutCubic,
+                            ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              'Não tem conta? ',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            CnhhjTextLink(
+                              label: 'Clique aqui e crie a sua.',
+                              bold: true,
+                              onPressed: _exiting
+                                  ? null
+                                  : () => context.go(AppRoutes.signUp),
+                            ),
+                          ],
+                        )
+                            .animate()
+                            .fadeIn(delay: 600.ms, duration: 300.ms),
+                        const SizedBox(height: 12),
+                      ],
                     ),
-                const SizedBox(height: 18),
-                const _PromoBanner()
-                    .animate()
-                    .fadeIn(delay: 150.ms, duration: 400.ms)
-                    .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-                const SizedBox(height: 20),
-                CnhhjCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Text(
-                        'Faça o login na sua conta',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      CnhhjGoogleSignInButton(onPressed: _googleSignIn),
-                      const SizedBox(height: 14),
-                      CnhhjTextField(
-                        controller: _emailController,
-                        hint: 'Digite seu email',
-                        icon: PhosphorIconsRegular.envelope,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        validator: (String? v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Informe o e-mail';
-                          }
-                          if (!v.contains('@')) return 'E-mail inválido';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      CnhhjPasswordField(
-                        controller: _passwordController,
-                        hint: 'Digite sua senha',
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _submit(),
-                        validator: (String? v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Informe a senha';
-                          }
-                          if (v.length < 6) {
-                            return 'A senha precisa ter pelo menos 6 caracteres';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: CnhhjTextLink(
-                          label: 'Esqueci minha senha',
-                          fontSize: 12,
-                          onPressed: () {
-                            // TODO: rota de recuperação de senha
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      CnhhjPrimaryButton(
-                        label: 'Entrar',
-                        icon: PhosphorIconsRegular.signIn,
-                        onPressed: _submit,
-                      ),
-                      const SizedBox(height: 12),
-                      Center(
-                        child: CnhhjTextLink(
-                          label: 'Políticas de Privacidade',
-                          fontSize: 12,
-                          onPressed: () {
-                            // TODO: abrir tela/url de políticas
-                          },
-                        ),
-                      ),
-                    ],
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 300.ms, duration: 400.ms)
-                    .slideY(begin: 0.15, end: 0, curve: Curves.easeOutCubic),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      'Não tem conta? ',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    CnhhjTextLink(
-                      label: 'Clique aqui e crie a sua.',
-                      bold: true,
-                      onPressed: () => context.go(AppRoutes.signUp),
+                ),
+              ),
+            ),
+
+            // ─── Carro atravessando a tela durante a saída ──────────
+            if (_exiting)
+              const Positioned.fill(
+                child: IgnorePointer(child: _CarDriveAcross()),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Roda de direção que atravessa a tela rapidamente da esquerda para
+/// a direita — efeito de "carro saindo" durante a transição.
+class _CarDriveAcross extends StatelessWidget {
+  const _CarDriveAcross();
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: -2.2, end: 2.8),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInQuart,
+      builder: (BuildContext context, double xAlign, Widget? child) {
+        return Stack(
+          children: <Widget>[
+            // Speed lines (rastros de velocidade)
+            Align(
+              alignment: Alignment(xAlign - 0.6, 0.05),
+              child: _SpeedLine(opacity: (xAlign + 2.2) / 5.0),
+            ),
+            // Roda de direção girando
+            Align(
+              alignment: Alignment(xAlign, 0),
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: AppColors.textPrimary,
+                  shape: BoxShape.circle,
+                  boxShadow: const <BoxShadow>[
+                    BoxShadow(
+                      color: Color(0x66000000),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
                     ),
                   ],
-                )
-                    .animate()
-                    .fadeIn(delay: 500.ms, duration: 300.ms),
-                const SizedBox(height: 12),
-              ],
+                ),
+                alignment: Alignment.center,
+                child: child,
+              ),
             ),
+          ],
+        );
+      },
+      child: const Icon(
+        PhosphorIconsFill.steeringWheel,
+        size: 56,
+        color: AppColors.primary,
+      )
+          .animate(onPlay: (AnimationController c) => c.repeat())
+          .rotate(
+            duration: 400.ms,
+            curve: Curves.linear,
           ),
+    );
+  }
+}
+
+/// Linha de velocidade — rastro horizontal atrás da roda.
+class _SpeedLine extends StatelessWidget {
+  const _SpeedLine({required this.opacity});
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 90,
+      height: 5,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: <Color>[
+            AppColors.textPrimary.withOpacity(0.0),
+            AppColors.textPrimary.withOpacity(opacity.clamp(0.0, 0.55)),
+          ],
         ),
+        borderRadius: BorderRadius.circular(3),
       ),
     );
   }
