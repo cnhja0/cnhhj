@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/home/home_providers.dart';
+import '../../features/notifications/notifications_sheet.dart';
 import 'cnhhj_logo.dart';
 
 /// Header padronizado das abas do app: título grande em peso 900 +
@@ -91,7 +90,7 @@ class _NotificationBell extends StatelessWidget {
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
-            onTap: () => context.push(AppRoutes.notifications),
+            onTap: () => showNotificationsSheet(context),
             child: const Padding(
               padding: EdgeInsets.all(8),
               child: Icon(
