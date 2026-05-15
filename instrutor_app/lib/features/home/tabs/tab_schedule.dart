@@ -34,7 +34,7 @@ class _TabScheduleState extends ConsumerState<TabSchedule> {
         ref.watch(_confirmedProvider(userId));
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[

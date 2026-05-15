@@ -140,8 +140,9 @@ class _TabLessonState extends ConsumerState<TabLesson> {
       show: _saving,
       message: 'Salvando...',
       child: CnhhjScaffold(
-        // 90 = clear da bottom nav floating (84) + ~6px buffer
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+        // 110 = clear da bottom nav floating (16 margem + 68 altura
+        // + ~25 safe area = ~109px) com pequeno buffer.
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(

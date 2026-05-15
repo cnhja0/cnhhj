@@ -89,7 +89,8 @@ class TabHome extends ConsumerWidget {
     ];
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+      // 110 = clear total da bottom nav flutuante (~109px na pior config)
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -118,7 +119,9 @@ class TabHome extends ConsumerWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 1.15,
+              // 1.3 deixa cards mais 'achatados' — 3 fileiras cabem
+              // confortavelmente acima do bottom nav em telas pequenas.
+              childAspectRatio: 1.3,
               children: <Widget>[
                 for (int i = 0; i < actions.length; i++)
                   _HomeCard(action: actions[i])
