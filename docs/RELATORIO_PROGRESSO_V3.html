@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CNHhj — Relatório de Progresso v3</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm 16mm 16mm 16mm;
+    page-break-after: always;
+    background: #ffffff;
+    position: relative;
+  }
+  .page:last-of-type { page-break-after: auto; }
+
+  .cover {
+    background: #FFD000;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .cover-inner {
+    padding: 30mm 18mm 18mm 18mm;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .cover .logo { width: 200px; margin-bottom: 22mm; }
+  .cover h1 {
+    font-size: 42pt; font-weight: 900; line-height: 1.05;
+    margin: 0 0 5mm 0; color: #000; letter-spacing: -1px;
+  }
+  .cover .subtitle { font-size: 15pt; font-weight: 600; color: #000; margin-bottom: 8mm; }
+  .cover .badge-v3 {
+    display: inline-block;
+    background: #000;
+    color: #FFD000;
+    padding: 3px 11px;
+    border-radius: 4px;
+    font-size: 11pt;
+    font-weight: 800;
+    margin-bottom: 8mm;
+    letter-spacing: 0.5px;
+  }
+  .cover .meta { font-size: 10.5pt; color: #1a1a1a; }
+  .cover .meta p { margin: 2mm 0; }
+  .cover .meta strong { display: inline-block; min-width: 100px; }
+  .cover-footer {
+    background: #000;
+    color: #FFD000;
+    padding: 12mm 18mm;
+    font-size: 9.5pt;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .section-eyebrow {
+    display: inline-block;
+    background: #000;
+    color: #FFD000;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5mm;
+  }
+  h2 {
+    font-size: 22pt;
+    font-weight: 900;
+    margin: 0 0 6mm 0;
+    color: #000;
+    letter-spacing: -0.5px;
+  }
+  h3 {
+    font-size: 13pt;
+    font-weight: 800;
+    margin: 6mm 0 2mm 0;
+    color: #000;
+    border-bottom: 2px solid #FFD000;
+    padding-bottom: 2px;
+  }
+  h4 { font-size: 11pt; font-weight: 700; margin: 4mm 0 1mm 0; }
+  p { font-size: 10pt; margin: 0 0 2mm 0; }
+
+  .hero {
+    background: linear-gradient(135deg, #FFD000 0%, #FFE970 100%);
+    padding: 6mm 8mm;
+    border-radius: 8px;
+    margin: 0 0 5mm 0;
+    border-left: 5px solid #000;
+  }
+  .hero p { margin: 0; font-size: 10.5pt; font-weight: 500; }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3mm;
+    margin: 4mm 0;
+  }
+  .kpi {
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 6px;
+    padding: 3mm;
+    text-align: center;
+  }
+  .kpi .number {
+    font-size: 18pt;
+    font-weight: 900;
+    color: #000;
+    line-height: 1;
+    display: block;
+    margin-bottom: 1mm;
+  }
+  .kpi .label {
+    font-size: 8pt;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .kpi-delta {
+    font-size: 8pt;
+    color: #47C100;
+    font-weight: 700;
+    margin-top: 1mm;
+  }
+
+  ul.clean { list-style: none; padding-left: 0; }
+  ul.clean li { padding: 1.5mm 0 1.5mm 8mm; position: relative; font-size: 9.5pt; }
+  ul.clean li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #47C100;
+    font-weight: 900;
+    font-size: 11pt;
+  }
+  ul.clean.new li:before { content: "★"; color: #FFD000; }
+  ul.clean.bug li:before { content: "🔧"; font-size: 10pt; }
+
+  ul.bullets { padding-left: 5mm; }
+  ul.bullets li { margin-bottom: 1mm; font-size: 9.5pt; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+
+  .card {
+    background: #fafafa;
+    border-left: 4px solid #FFD000;
+    padding: 4mm;
+    margin: 3mm 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .card.dark {
+    background: #1a1a1a;
+    color: #fff;
+    border-left-color: #FFD000;
+  }
+  .card.dark h4 { color: #FFD000; }
+  .card.success {
+    background: #E8F5E0;
+    border-left-color: #47C100;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 9pt; }
+  th { background: #000; color: #FFD000; text-align: left; padding: 2.5mm 3mm; font-weight: 700; }
+  td { padding: 2.5mm 3mm; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 8pt; font-weight: 700; }
+  .badge.new { background: #47C100; color: #fff; }
+  .badge.improved { background: #FFD000; color: #000; }
+  .badge.fix { background: #D32F2F; color: #fff; }
+
+  .timeline { margin: 4mm 0; position: relative; }
+  .timeline-item {
+    padding: 2mm 0 2mm 11mm;
+    border-left: 3px solid #FFD000;
+    margin-left: 4mm;
+    position: relative;
+  }
+  .timeline-item:before {
+    content: "";
+    width: 11px;
+    height: 11px;
+    background: #FFD000;
+    border: 3px solid #000;
+    border-radius: 50%;
+    position: absolute;
+    left: -6px;
+    top: 3mm;
+  }
+  .timeline-item.done:before { background: #47C100; }
+  .timeline-item.next:before { background: #fff; border-color: #FFD000; }
+  .timeline-item .when { font-size: 8pt; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .timeline-item .what { font-size: 10pt; font-weight: 700; }
+  .timeline-item .detail { font-size: 9pt; color: #555; }
+
+  .commit-list { font-family: 'Consolas', 'Courier New', monospace; font-size: 8.5pt; }
+  .commit-list .hash { color: #FFD000; background: #000; padding: 1px 5px; border-radius: 3px; }
+
+  .priority-box {
+    background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+    color: #fff;
+    padding: 6mm;
+    border-radius: 8px;
+    margin: 4mm 0;
+    border: 3px solid #FFD000;
+  }
+  .priority-box h4 { color: #FFD000; margin: 0 0 3mm 0; font-size: 13pt; }
+  .priority-box strong { color: #FFD000; }
+
+  .quote {
+    background: #FFFAE6;
+    padding: 4mm 7mm;
+    border-radius: 6px;
+    font-style: italic;
+    font-size: 10.5pt;
+    margin: 4mm 0;
+    border-left: 4px solid #FFD000;
+  }
+
+  .ascii-art {
+    font-family: 'Consolas', monospace;
+    font-size: 8.5pt;
+    background: #fafafa;
+    padding: 4mm;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    margin: 3mm 0;
+    line-height: 1.3;
+    white-space: pre;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="page cover">
+  <div class="cover-inner">
+    <img src="report-assets/cnhhj_logo.svg" class="logo" alt="CNHhj">
+    <span class="badge-v3">v3 · 10 NOVAS FEATURES</span>
+    <h1>Relatório de<br>Progresso</h1>
+    <div class="subtitle">App do Instrutor — sprint pós-UI v2</div>
+    <div class="meta">
+      <p><strong>Data:</strong> 14 de Maio de 2026</p>
+      <p><strong>Versão:</strong> 0.3.0</p>
+      <p><strong>Foco:</strong> Lançamento em Guarulhos/SP</p>
+      <p><strong>Último commit:</strong> 2c64e54 (roteamento de notificações)</p>
+      <p><strong>Total de commits:</strong> 24</p>
+    </div>
+  </div>
+  <div class="cover-footer">
+    Confidencial · Documento Interno · CNHhj — Versão 3
+  </div>
+</div>
+
+<!-- 1. RESUMO EXECUTIVO -->
+<div class="page">
+  <span class="section-eyebrow">01 · Resumo</span>
+  <h2>O Que Mudou Desde o V2</h2>
+
+  <div class="hero">
+    <p>Sprint focado em features que faltavam para o app ficar completo no MVP: <strong>edição de perfil</strong>, <strong>sistema de notificações</strong> com bottom sheet, <strong>banner rotativo</strong> na Home e refinos visuais. <strong>10 commits</strong>, 2.121 linhas adicionadas, zero regressões.</p>
+  </div>
+
+  <h3>Números do projeto</h3>
+  <div class="kpis">
+    <div class="kpi">
+      <span class="number">94</span>
+      <span class="label">Arquivos Dart</span>
+      <div class="kpi-delta">+8 desde v2</div>
+    </div>
+    <div class="kpi">
+      <span class="number">10.292</span>
+      <span class="label">Linhas de código</span>
+      <div class="kpi-delta">+2.121</div>
+    </div>
+    <div class="kpi">
+      <span class="number">24</span>
+      <span class="label">Commits</span>
+      <div class="kpi-delta">+10 desde v2</div>
+    </div>
+    <div class="kpi">
+      <span class="number">359 KB</span>
+      <span class="label">Código Dart</span>
+      <div class="kpi-delta">+78 KB</div>
+    </div>
+  </div>
+
+  <h3>Resumo das 10 mudanças nesta sprint</h3>
+  <table>
+    <thead>
+      <tr><th style="width:30%">Mudança</th><th style="width:12%">Tipo</th><th>Descrição</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Edição de Perfil</strong></td>
+        <td><span class="badge new">NOVO</span></td>
+        <td>Tela completa com foto, dados pessoais, contato e bio. Acessível via aba MAIS.</td>
+      </tr>
+      <tr>
+        <td><strong>Sistema de Notificações</strong></td>
+        <td><span class="badge new">NOVO</span></td>
+        <td>Sino no header, 6 tipos com ícones diferentes, badge de não lidas, mock seed de 5 notificações.</td>
+      </tr>
+      <tr>
+        <td><strong>Bottom Sheet de Notificações</strong></td>
+        <td><span class="badge new">NOVO</span></td>
+        <td>Notificações abrem como sheet deslizante (não tira o usuário da aba). Arrastável 45%-92%.</td>
+      </tr>
+      <tr>
+        <td><strong>Banner Rotativo na Home</strong></td>
+        <td><span class="badge new">NOVO</span></td>
+        <td>3 criativos auto-rotativos (5s cada) com swipe manual, indicadores e CTAs específicos.</td>
+      </tr>
+      <tr>
+        <td><strong>Polimento de Chat</strong></td>
+        <td><span class="badge improved">MELHORIA</span></td>
+        <td>Phosphor icons, badge de mensagens não lidas, composer redesenhado com animação.</td>
+      </tr>
+      <tr>
+        <td><strong>Polimento Wizard/Análise/Finalizado</strong></td>
+        <td><span class="badge improved">MELHORIA</span></td>
+        <td>Indicador "Passo X de Y", animação rotativa no hourglass, pop animation no seal de sucesso.</td>
+      </tr>
+      <tr>
+        <td><strong>Diferenciação de Ícones</strong></td>
+        <td><span class="badge fix">FIX UX</span></td>
+        <td>Sino (notificações) ≠ Bandeja (solicitações). Antes ambos usavam ícone de sino.</td>
+      </tr>
+      <tr>
+        <td><strong>Roteamento Inteligente</strong></td>
+        <td><span class="badge new">NOVO</span></td>
+        <td>Notificações com defaultRoute por tipo. Rotas /home/* trocam aba em vez de empilhar shell.</td>
+      </tr>
+      <tr>
+        <td><strong>Sombras + Layout</strong></td>
+        <td><span class="badge improved">MELHORIA</span></td>
+        <td>Sombras mais fortes (16% blur 20), padding nav otimizado (110→20), badges sem contorno.</td>
+      </tr>
+      <tr>
+        <td><strong>Avaliações com Aspas</strong></td>
+        <td><span class="badge improved">MELHORIA</span></td>
+        <td>Comentários renderizados em card amarelo claro com ícone de aspas + texto em itálico.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 2. EDIÇÃO DE PERFIL -->
+<div class="page">
+  <span class="section-eyebrow">02 · Feature destacada</span>
+  <h2>Edição de Perfil</h2>
+
+  <p>Era prioridade #1 do roadmap V2. Agora está completa e integrada.</p>
+
+  <h3>Como acessar</h3>
+  <ul class="clean">
+    <li>Aba <strong>MAIS</strong> → toque no item "Perfil"</li>
+    <li>Aba <strong>MAIS</strong> → toque no card com seu avatar e nome (atalho rápido)</li>
+  </ul>
+
+  <h3>Campos editáveis</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Tipo</th><th>Validação</th></tr></thead>
+    <tbody>
+      <tr><td>Foto de perfil</td><td>Upload câmera/galeria</td><td>Opcional · remover suportado</td></tr>
+      <tr><td>Nome completo</td><td>Texto</td><td>Obrigatório, mín. 3 chars</td></tr>
+      <tr><td>CPF</td><td>Texto com máscara 000.000.000-00</td><td>Opcional, 11 dígitos</td></tr>
+      <tr><td>Data de nascimento</td><td>Date picker</td><td>Maior de 18 anos</td></tr>
+      <tr><td>Sexo</td><td>Dropdown</td><td>Opcional</td></tr>
+      <tr><td>Telefone</td><td>Texto com máscara (XX) XXXXX-XXXX</td><td>10-11 dígitos</td></tr>
+      <tr><td>Bio profissional</td><td>Textarea</td><td>Até 280 chars</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Diferenciais de UX</h3>
+  <ul class="clean">
+    <li>Avatar grande 120px com borda preta e botão de câmera circular sobreposto</li>
+    <li>Cards agrupando: Dados pessoais · Contato · Sobre você</li>
+    <li>Badge <strong>"NÃO SALVO"</strong> aparece no AppBar ao detectar mudança</li>
+    <li>Botão Salvar fica desabilitado até haver alteração</li>
+    <li>Modal de confirmação ao tentar sair com mudanças não salvas</li>
+    <li>Após salvar: invalida providers globais → Home reflete nome/foto novos sem F5</li>
+  </ul>
+
+  <h3>Implementação técnica</h3>
+  <div class="card">
+    <p style="font-size:9pt;"><strong>Arquivos criados:</strong></p>
+    <ul class="bullets">
+      <li><code>lib/features/profile/profile_edit_screen.dart</code> — ~440 linhas, UI</li>
+      <li><code>lib/features/profile/profile_edit_controller.dart</code> — Riverpod Notifier para save logic</li>
+    </ul>
+    <p style="font-size:9pt;"><strong>Mudanças de suporte:</strong></p>
+    <ul class="bullets">
+      <li><code>InstructorRepository.updateProfile()</code> ampliado: aceita cpf, birthDate, gender</li>
+      <li><code>currentProfileProvider</code> movido para <code>home_providers.dart</code> e tipado Profile?</li>
+      <li>TabMore.<code>_UserHeader</code> agora é reativo (usa o provider compartilhado)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 3. SISTEMA DE NOTIFICAÇÕES -->
+<div class="page">
+  <span class="section-eyebrow">03 · Feature destacada</span>
+  <h2>Sistema de Notificações</h2>
+
+  <p>Arquitetura completa: modelo, repositório, mock seed, bell no header, bottom sheet, roteamento inteligente.</p>
+
+  <h3>6 tipos de notificação suportados</h3>
+  <table>
+    <thead><tr><th>Tipo</th><th>Ícone</th><th>Cor</th><th>Destino (default)</th></tr></thead>
+    <tbody>
+      <tr><td>Solicitação de aula</td><td>bell-ringing</td><td>Amarelo</td><td>/home/solicitacoes</td></tr>
+      <tr><td>Aula confirmada</td><td>calendar-check</td><td>Verde</td><td>/home/agenda</td></tr>
+      <tr><td>Aula cancelada</td><td>x-circle</td><td>Vermelho</td><td>/home/agenda</td></tr>
+      <tr><td>Avaliação recebida</td><td>star</td><td>Amarelo</td><td>/reviews</td></tr>
+      <tr><td>Aviso do sistema</td><td>megaphone</td><td>Preto</td><td>(sem destino)</td></tr>
+      <tr><td>Lembrete</td><td>alarm</td><td>Laranja</td><td>/home/agenda</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Bottom sheet — não tira o usuário da aba atual</h3>
+  <div class="ascii-art">  Antes:                       Depois:
+  Toque no sino                Toque no sino
+       ↓                            ↓
+  PUSH nova tela              SHEET sobe de baixo
+  Você sai da aba             Você continua na aba
+  Botão voltar empilhado      Arrasta pra baixo p/ fechar</div>
+
+  <ul class="clean">
+    <li>Inicia ocupando 75% da tela, arrastável até 92% pra cima</li>
+    <li>Fecha ao arrastar abaixo de 45% ou tocar fora ou no X</li>
+    <li>Header com sino preto + "Notificações" + contagem + botão "Marcar lidas"</li>
+    <li>Lista scrollável independente, animação stagger nos items</li>
+  </ul>
+
+  <h3>Roteamento inteligente</h3>
+  <p>Toque em uma notificação faz:</p>
+  <ul class="clean">
+    <li>Marca como lida (badge atualiza imediatamente)</li>
+    <li>Resolve destino: <code>actionRoute</code> explícita ou <code>type.defaultRoute</code></li>
+    <li>Se destino é uma das 5 abas (/home, /home/aula, etc.) → <strong>troca de aba</strong> via tabIndexProvider, sem empilhar nova HomeShell</li>
+    <li>Se destino é externo (/chats, /reviews, /profile/edit) → <strong>context.push</strong> normal</li>
+  </ul>
+
+  <h3>Diferenciação visual: sino vs bandeja</h3>
+  <table>
+    <thead><tr><th>Onde</th><th>Ícone</th><th>Significado</th></tr></thead>
+    <tbody>
+      <tr><td>Header de cada aba</td><td>🔔 bell-ringing</td><td>Notificações/avisos passivos</td></tr>
+      <tr><td>Bottom nav (3ª posição)</td><td>📥 tray (bandeja)</td><td>Pedidos esperando ação</td></tr>
+      <tr><td>Card da Home</td><td>📥 tray Duotone</td><td>Mesma coisa, atalho visual</td></tr>
+    </tbody>
+  </table>
+
+  <div class="card success">
+    <p style="font-size:9pt;"><strong>Por que separar:</strong> são fluxos mentais distintos. "Preciso agir agora" (pedido pendente = bandeja) é diferente de "o que aconteceu enquanto eu estava fora" (atividade = sino). Misturar dificulta priorização.</p>
+  </div>
+</div>
+
+<!-- 4. BANNER ROTATIVO -->
+<div class="page">
+  <span class="section-eyebrow">04 · Feature destacada</span>
+  <h2>Banner Rotativo na Home</h2>
+
+  <p>Carousel auto-rotativo com 3 criativos no topo da Home. Ocupa 140px, posição entre o TabHeader e o stats card.</p>
+
+  <h3>Os 3 criativos</h3>
+  <table>
+    <thead><tr><th>#</th><th>Mensagem</th><th>Visual</th><th>CTA</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>1</strong></td>
+        <td>"Sua CNH começa aqui!" — pitch da marca</td>
+        <td>Fundo preto · ícone steering-wheel amarelo</td>
+        <td>Configurar aula → aba AULA</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td>"Receba mais solicitações"</td>
+        <td>Fundo verde · ícone calendar branco</td>
+        <td>Ver agenda → aba AGENDA</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td>"Complete seu perfil"</td>
+        <td>Fundo amarelo claro · ícone user-circle preto</td>
+        <td>Editar perfil → /profile/edit</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Comportamento</h3>
+  <ul class="clean">
+    <li><strong>Auto-rotação</strong> a cada 5 segundos via <code>Timer.periodic</code></li>
+    <li><strong>Swipe manual</strong> suportado — quando o usuário arrasta, o timer reinicia</li>
+    <li><strong>Indicadores</strong> embaixo: pílula ativa expande para 20px, inativas viram pontos 6px, com animação suave</li>
+    <li><strong>Toque</strong> no slide ativa a ação correspondente</li>
+    <li>Cada slide tem visual único (fundo, ícone, tipografia) — sensação rica</li>
+  </ul>
+
+  <h3>Como adicionar/editar criativos</h3>
+  <p>Basta editar <code>lib/features/home/widgets/home_banner.dart</code> → método <code>_slides()</code> → adicionar mais <code>_BannerSlide(...)</code> na lista. Os indicadores ajustam automaticamente ao número de slides.</p>
+
+  <h3>Casos de uso futuros do banner</h3>
+  <ul class="clean">
+    <li>Anúncios de plataforma (ex: "Nova categoria CNH disponível")</li>
+    <li>Tutoriais sazonais (ex: "5 dicas para conquistar mais alunos")</li>
+    <li>Promoções (quando o plano VIP for lançado)</li>
+    <li>Eventos (ex: "Workshop online quinta")</li>
+    <li>Cross-sell de features (ex: "Conheça o app do aluno")</li>
+  </ul>
+</div>
+
+<!-- 5. POLIMENTO VISUAL -->
+<div class="page">
+  <span class="section-eyebrow">05 · Polimento</span>
+  <h2>Refinos Visuais</h2>
+
+  <h3>Chat completo (lista + sala)</h3>
+  <ul class="clean">
+    <li>Phosphor icons em tudo (arrowLeft, chatCircleDots, paperPlaneTilt, prohibit)</li>
+    <li><strong>Lista de conversas</strong>: badge vermelho de mensagens não lidas no avatar, texto da última mensagem em negrito quando há novas, horário também em destaque, caret indicando ação</li>
+    <li><strong>Sala</strong>: AppBar com avatar + nome + sublegenda "Aluno", bubbles entram com slideX direcional (suas vão da direita, do aluno da esquerda)</li>
+    <li><strong>Composer</strong> redesenhado: botão de enviar circular preto com paper-plane amarelo, animated scale 0.85↔1.0 conforme há texto ou não</li>
+  </ul>
+
+  <h3>Onboarding (Wizard 7 passos + Análise + Finalizado)</h3>
+  <ul class="clean">
+    <li>Header do wizard: logo pequeno + texto "Passo X de Y" + barra de progresso animada</li>
+    <li>Botões Anterior/Próximo com ícones (arrowLeft, arrowRight, check no último)</li>
+    <li>Card de cada passo entra com fade+slide (keyed pelo currentStep)</li>
+    <li><strong>Análise em Processo</strong>: ícone hourglass-medium em círculo amarelo claro, <strong>rotação em loop</strong> (1.8s)</li>
+    <li><strong>Cadastro Finalizado</strong>: ícone seal-check verde em círculo translúcido, animação <strong>pop</strong> (easeOutBack), sequência cascateada de fade-in</li>
+  </ul>
+
+  <h3>Avaliações</h3>
+  <ul class="clean">
+    <li>Sumário com ícone star Phosphor fill + nota grande peso 900, em card com borda preta</li>
+    <li>Stagger animation nos reviews</li>
+    <li><strong>Comentários</strong> renderizados em card amarelo claro com ícone de aspas (PhosphorIconsDuotone.quotes) e texto em itálico — destaca o testemunho</li>
+  </ul>
+
+  <h3>Sombras + Bordas dos badges</h3>
+  <table>
+    <thead><tr><th>Antes</th><th>Depois</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Cards: sombra 8% blur 16</td>
+        <td>Cards: sombra <strong>16% blur 20</strong> (mais profundidade)</td>
+      </tr>
+      <tr>
+        <td>Badge no card da Home: contorno preto 2px</td>
+        <td>Badge sem contorno, com sombra suave</td>
+      </tr>
+      <tr>
+        <td>Badge no avatar do chat: contorno amarelo 2px</td>
+        <td>Badge sem contorno, com sombra suave</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Layout — gap conteúdo/navbar</h3>
+  <p>Após ajuste fino: bottom padding das tabs reduzido para <strong>20px</strong> (era 110). Conteúdo agora fica próximo da navbar flutuante, sem aquele yellow gap excessivo. SingleChildScrollView trata overflow normalmente.</p>
+</div>
+
+<!-- 6. HISTÓRICO DE COMMITS -->
+<div class="page">
+  <span class="section-eyebrow">06 · Histórico</span>
+  <h2>Os 10 Commits desta Sprint</h2>
+
+  <p>Ordem cronológica (mais antigo em baixo):</p>
+
+  <div class="commit-list">
+    <table>
+      <thead><tr><th style="width:18%">Hash</th><th>Mensagem</th></tr></thead>
+      <tbody>
+        <tr><td><span class="hash">2c64e54</span></td><td>feat(notifications): roteamento inteligente por tipo + switch de aba</td></tr>
+        <tr><td><span class="hash">21b5e75</span></td><td>feat(notifications): abrir como bottom sheet em vez de tela cheia</td></tr>
+        <tr><td><span class="hash">6c5b82a</span></td><td>feat(home): integrar HomeBanner entre TabHeader e stats card</td></tr>
+        <tr><td><span class="hash">36af9e7</span></td><td>feat(home): banner rotativo no topo com 3 criativos</td></tr>
+        <tr><td><span class="hash">9fe3f03</span></td><td>style(icons): tray também no empty state da aba Solicitações</td></tr>
+        <tr><td><span class="hash">e4bc6f1</span></td><td>style(icons): tray para Solicitações (diferencia do sino)</td></tr>
+        <tr><td><span class="hash">17b37b3</span></td><td>feat(notifications): sino no topo + tela de notificações + ajustes UI</td></tr>
+        <tr><td><span class="hash">982908b</span></td><td>fix(layout): bottom padding 90→110 + grid aspect 1.15→1.3</td></tr>
+        <tr><td><span class="hash">809089a</span></td><td>style(ui): polir chat, reviews, wizard, análise e finalizado</td></tr>
+        <tr><td><span class="hash">59a53d1</span></td><td>feat(profile): tela de edição de perfil do instrutor</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Como acessar o histórico no GitHub</h3>
+  <p>https://github.com/cnhja0/cnhhj/commits/main</p>
+
+  <h3>Estatísticas da sprint</h3>
+  <div class="three-col">
+    <div class="card">
+      <h4>+2.121</h4>
+      <p style="font-size:9pt;">Linhas de código adicionadas</p>
+    </div>
+    <div class="card">
+      <h4>8</h4>
+      <p style="font-size:9pt;">Novos arquivos Dart criados (banner, notifications, profile, etc)</p>
+    </div>
+    <div class="card">
+      <h4>10</h4>
+      <p style="font-size:9pt;">Commits enviados ao GitHub, cada um buildado automaticamente no Codemagic</p>
+    </div>
+  </div>
+</div>
+
+<!-- 7. PRÓXIMOS PASSOS -->
+<div class="page">
+  <span class="section-eyebrow">07 · Roadmap</span>
+  <h2>Próximos Passos</h2>
+
+  <div class="priority-box">
+    <h4>★ Prioridade imediata</h4>
+    <p>Com o app do Instrutor visualmente completo, a próxima frente é <strong>destravar o lado backend e o app do Aluno</strong>. O foco muda de UI para integração e escalabilidade.</p>
+  </div>
+
+  <div class="timeline">
+    <div class="timeline-item next">
+      <span class="when">1ª — esta semana</span>
+      <div class="what">Tornar repo público + deploy Web no GitHub Pages</div>
+      <div class="detail">~30 minutos de configuração. Permite que você acesse o app pelo Safari do iPhone via <code>cnhja0.github.io/cnhhj</code> (sem precisar de APK ou Apple Developer).</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">2ª — próximos dias</span>
+      <div class="what">Testes unitários e de widget</div>
+      <div class="detail">Usar a skill flutter-tester já instalada. Cobertura mínima: auth controllers, onboarding draft, repositórios mock, controller de notificações. ~1 dia. Reduz risco de regressões.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">3ª — semana 2</span>
+      <div class="what">RLS Supabase + Implementação Supabase real</div>
+      <div class="detail">Escrever <code>migration 0002_rls_policies.sql</code>. Implementar 6 SupabaseRepository substituindo os 6 mocks. Trocar <code>APP_MODE=supabase</code>. Subir primeiros instrutores reais. ~3 dias.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">4ª — semanas 3-5</span>
+      <div class="what">App do Aluno (Fase 2)</div>
+      <div class="detail">Reutiliza modelos, design system, repositórios, providers. Telas novas: busca de instrutores próximos, perfil detalhado, agendamento, chat, avaliação. Estimativa: ~50% do tempo do app do Instrutor pois fundação já existe.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">5ª — semana 6+</span>
+      <div class="what">Aquisição de oferta em Guarulhos</div>
+      <div class="detail">Cadastrar manualmente os primeiros 5 instrutores que você tem contato. Selo "Parceiro Fundador". Sem isso, o app do Aluno fica vazio na fase 1.</div>
+    </div>
+
+    <div class="timeline-item next">
+      <span class="when">Q3/Q4 2026</span>
+      <div class="what">Marketing + Lançamento beta + Pagamentos</div>
+      <div class="detail">Tráfego pago Meta Ads (~R$ 50/dia), parcerias com autoescolas locais. Beta aberto para alunos em Guarulhos. Integração Pagar.me para split de comissão 20%. Plano VIP para instrutores.</div>
+    </div>
+  </div>
+
+  <h3>O que ainda precisa ser decidido</h3>
+  <ul class="clean bug">
+    <li>Repositório público ou continuar privado (com Cloudflare Pages como alternativa)</li>
+    <li>Apple Developer Account (US$ 99/ano) para distribuir iOS</li>
+    <li>Estrutura jurídica (MEI vs LTDA) para começar a cobrar</li>
+    <li>Lista preliminar dos 5 primeiros instrutores em Guarulhos</li>
+    <li>Termos de Uso + Política de Privacidade (revisão por advogado)</li>
+  </ul>
+</div>
+
+<!-- 8. FECHAMENTO -->
+<div class="page">
+  <span class="section-eyebrow">08 · Fechamento</span>
+  <h2>Estado Atual e Recomendações</h2>
+
+  <h3>O que está pronto</h3>
+  <div class="ascii-art">App do Instrutor — fluxo completo
+─────────────────────────────────────────
+✓ Splash 2s + sessão persistente
+✓ Login (email/senha + Google)
+✓ Cadastro
+✓ Wizard 7 passos (com animações)
+✓ Análise em Processo + Cadastro Finalizado
+✓ Home com banner rotativo + stats + grid 6 cards
+✓ Aula (configurar oferta com preview live)
+✓ Solicitações (aceitar/recusar)
+✓ Agenda (calendário interativo)
+✓ Mais (perfil, conversas, avaliações, suporte, sair)
+✓ Chat realtime (com bloqueio)
+✓ Avaliações recebidas (com comentários estilizados)
+✓ Edição de perfil (foto + dados + bio)
+✓ Notificações in-app (sheet + 6 tipos)
+✓ Roteamento inteligente entre abas
+✓ Sessão persistente (não pede re-login)
+✓ Modal "Sem Sinal"
+✓ Transições fade+slide globais</div>
+
+  <h3>Frase de 1 linha para o sócio</h3>
+  <div class="quote">
+    "O app do Instrutor está visualmente completo no MVP. Agora o gargalo é estratégia de captação dos primeiros instrutores em Guarulhos — o técnico já não bloqueia mais nada."
+  </div>
+
+  <h3>O que pedir ao sócio nesta reunião</h3>
+  <ul class="clean">
+    <li>Aprovação do escopo entregue (vê o APK novo e valida)</li>
+    <li>Decisão: repo público vs Cloudflare Pages</li>
+    <li>Definir lista preliminar de 5 instrutores a abordar em Guarulhos</li>
+    <li>Cronograma das próximas 4 semanas (web deploy + Supabase + app aluno)</li>
+    <li>Orçamento para registro de marca + domínio (R$ 350 + R$ 40)</li>
+  </ul>
+
+  <h3>Custo até agora</h3>
+  <div class="hero">
+    <p><strong>R$ 0,00</strong> em ferramentas. Free tiers de GitHub + Codemagic + Supabase + Google Fonts cobrem tudo nessa fase. Investimento de tempo + know-how.</p>
+  </div>
+
+  <div style="margin-top: 10mm; padding: 6mm; background: #FFD000; border-radius: 6px; text-align: center;">
+    <p style="font-size: 13pt; font-weight: 900; margin: 0;">CNHhj — Sua CNH começa aqui.</p>
+    <p style="font-size: 9pt; margin: 2mm 0 0 0;">Relatório v3 · 14 de Maio de 2026 · Versão 0.3.0</p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -10,9 +10,7 @@ import 'cnhhj_logo.dart';
 
 /// Header padronizado das abas do app: título grande em peso 900 +
 /// subtítulo opcional à esquerda. À direita: sino de notificações
-/// (badge se há não lidas) + logo CNHhj.
-///
-/// Use no topo de cada tab da Home para manter consistência visual.
+/// (apenas o contorno, sem fundo) + logo CNHhj.
 class TabHeader extends ConsumerWidget {
   const TabHeader({
     super.key,
@@ -23,8 +21,6 @@ class TabHeader extends ConsumerWidget {
 
   final String title;
   final String? subtitle;
-
-  /// Mostra o sino de notificações com badge. Padrão `true`.
   final bool showBell;
 
   @override
@@ -67,7 +63,7 @@ class TabHeader extends ConsumerWidget {
         const SizedBox(width: 8),
         if (showBell) ...<Widget>[
           _NotificationBell(unread: unread),
-          const SizedBox(width: 8),
+          const SizedBox(width: 18),
         ],
         const CnhhjLogo(size: 36, iconOnly: true),
       ],
@@ -75,7 +71,8 @@ class TabHeader extends ConsumerWidget {
   }
 }
 
-/// Sino de notificações com badge contendo a contagem de não lidas.
+/// Sino de notificações — apenas o contorno (sem fundo branco) com
+/// badge contendo a contagem de não lidas.
 class _NotificationBell extends StatelessWidget {
   const _NotificationBell({required this.unread});
   final int unread;
@@ -85,19 +82,15 @@ class _NotificationBell extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: <Widget>[
-        Material(
-          color: AppColors.surface,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () => showNotificationsSheet(context),
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icon(
-                PhosphorIconsRegular.bellRinging,
-                size: 22,
-                color: AppColors.textPrimary,
-              ),
+        InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => showNotificationsSheet(context),
+          child: const Padding(
+            padding: EdgeInsets.all(4),
+            child: Icon(
+              PhosphorIconsRegular.bellRinging,
+              size: 28,
+              color: AppColors.textPrimary,
             ),
           ),
         ),
