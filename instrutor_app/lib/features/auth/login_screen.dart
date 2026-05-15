@@ -343,9 +343,25 @@ class _SpeedLine extends StatelessWidget {
 }
 
 /// Banner promocional do topo do login.
-/// Quando você fornecer o asset real, substituímos por `Image.asset(...)`.
+///
+/// Suporta dois modos:
+///
+/// 1. **Imagem customizada (preferido quando você tiver o criativo):**
+///    Salve o arquivo em
+///    `instrutor_app/assets/images/login/banner.png`
+///    (recomendado: 720x310px, PNG ou JPG, até ~200KB).
+///    Ao detectar o asset, o banner renderiza a imagem em full-bleed.
+///
+/// 2. **Fallback gerado por código** (atual, quando o asset não existe):
+///    Card preto com gradient + texto "SUA CNH COMEÇA AQUI!" + pílula
+///    amarela com logo CNHhj. É o que aparece se você ainda não
+///    forneceu uma imagem.
 class _PromoBanner extends StatelessWidget {
   const _PromoBanner();
+
+  /// Caminho do criativo customizado. Se este arquivo existir no bundle,
+  /// é renderizado em vez do fallback gerado.
+  static const String _customAsset = 'assets/images/login/banner.png';
 
   @override
   Widget build(BuildContext context) {
@@ -353,11 +369,6 @@ class _PromoBanner extends StatelessWidget {
       width: double.infinity,
       height: 150,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFF1a1a1a), Color(0xFF000000)],
-        ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: const <BoxShadow>[
           BoxShadow(
@@ -366,6 +377,39 @@ class _PromoBanner extends StatelessWidget {
             offset: Offset(0, 6),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        // Tenta carregar a imagem custom. Se falhar (asset não existe),
+        // mostra o fallback gerado por código.
+        child: Image.asset(
+          _customAsset,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 150,
+          errorBuilder:
+              (BuildContext c, Object e, StackTrace? s) =>
+                  const _PromoBannerFallback(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Fallback do banner promocional — gerado por código.
+/// Aparece quando o asset `assets/images/login/banner.png` não existe.
+class _PromoBannerFallback extends StatelessWidget {
+  const _PromoBannerFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[Color(0xFF1a1a1a), Color(0xFF000000)],
+        ),
       ),
       padding: const EdgeInsets.all(22),
       child: Row(
