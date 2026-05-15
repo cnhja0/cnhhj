@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/app_notification.dart';
 import '../../data/models/booking.dart';
 import '../../data/models/conversation.dart';
 import '../../data/models/enums.dart';
@@ -73,4 +74,20 @@ final FutureProvider<List<Booking>> pendingBookingsProvider =
   return ref
       .watch(bookingRepositoryProvider)
       .listByStatus(userId, BookingStatus.pending);
+});
+
+// ─── Notificações ────────────────────────────────────────────────────
+final StreamProvider<List<AppNotification>> notificationsProvider =
+    StreamProvider<List<AppNotification>>((Ref ref) {
+  final String userId = ref.watch(currentUserIdProvider);
+  return ref.watch(notificationRepositoryProvider).watch(userId);
+});
+
+final Provider<int> unreadNotificationsCountProvider = Provider<int>((Ref ref) {
+  final AsyncValue<List<AppNotification>> async =
+      ref.watch(notificationsProvider);
+  return async.value
+          ?.where((AppNotification n) => n.isUnread)
+          .length ??
+      0;
 });

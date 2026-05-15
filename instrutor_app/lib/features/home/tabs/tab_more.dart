@@ -58,7 +58,7 @@ class TabMore extends ConsumerWidget {
     ];
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       child: ListView(
         physics: const BouncingScrollPhysics(),
         children: <Widget>[

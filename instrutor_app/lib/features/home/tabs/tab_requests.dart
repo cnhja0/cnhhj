@@ -28,7 +28,7 @@ class TabRequests extends ConsumerWidget {
         ref.watch(_pendingBookingsProvider(userId));
 
     return CnhhjScaffold(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[

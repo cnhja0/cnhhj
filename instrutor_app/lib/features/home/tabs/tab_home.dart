@@ -89,8 +89,8 @@ class TabHome extends ConsumerWidget {
     ];
 
     return CnhhjScaffold(
-      // 110 = clear total da bottom nav flutuante (~109px na pior config)
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
+      // Padding bottom pequeno — gap mínimo entre conteúdo e navbar.
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -336,17 +336,13 @@ class _HomeCard extends StatelessWidget {
               top: -6,
               right: -6,
               child: Container(
-                width: 24,
-                height: 24,
+                width: 22,
+                height: 22,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.error,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.textPrimary,
-                    width: 2,
-                  ),
-                  boxShadow: const <BoxShadow>[
+                  boxShadow: <BoxShadow>[
                     BoxShadow(
                       color: Color(0x33000000),
                       blurRadius: 6,
@@ -357,9 +353,10 @@ class _HomeCard extends StatelessWidget {
                 child: Text(
                   '${action.badge}',
                   style: GoogleFonts.poppins(
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: FontWeight.w900,
                     color: AppColors.surface,
+                    height: 1,
                   ),
                 ),
               ),

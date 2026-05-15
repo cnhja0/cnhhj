@@ -23,10 +23,11 @@ class AppRoutes {
   // (rota financial removida — sem aba Financeiro no MVP)
 
   // ─── Detalhes ──────────────────────────────────────────────────────
-  static const String chatList      = '/chats';
-  static const String chatRoom      = '/chats/:conversationId';
-  static const String reviewsList   = '/reviews';
-  static const String profileEdit   = '/profile/edit';
-  static const String guide         = '/guide';
-  static const String support       = '/support';
+  static const String chatList       = '/chats';
+  static const String chatRoom       = '/chats/:conversationId';
+  static const String reviewsList    = '/reviews';
+  static const String profileEdit    = '/profile/edit';
+  static const String notifications  = '/notifications';
+  static const String guide          = '/guide';
+  static const String support        = '/support';
 }

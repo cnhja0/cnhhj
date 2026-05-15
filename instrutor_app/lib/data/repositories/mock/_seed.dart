@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/app_notification.dart';
 import '../../models/booking.dart';
 import '../../models/conversation.dart';
 import '../../models/enums.dart';
@@ -37,6 +38,7 @@ class MockState {
   final Map<String, List<Message>> messagesByConversation =
       <String, List<Message>>{};
   final List<Review> reviews = <Review>[];
+  final List<AppNotification> notifications = <AppNotification>[];
 
   void seed() {
     if (profiles.isNotEmpty) return;
@@ -250,5 +252,59 @@ class MockState {
         createdAt: now.subtract(const Duration(days: 4)),
       ),
     );
+
+    // ─── Notificações in-app ────────────────────────────────────────
+    notifications.addAll(<AppNotification>[
+      AppNotification(
+        id: 'notif-001',
+        userId: currentInstructorId,
+        type: NotificationType.bookingRequest,
+        title: 'Nova solicitação de aula',
+        body:
+            'Juliana Souza solicitou uma aula para terça-feira às 10h.',
+        actionRoute: '/home/solicitacoes',
+        createdAt: now.subtract(const Duration(hours: 3)),
+      ),
+      AppNotification(
+        id: 'notif-002',
+        userId: currentInstructorId,
+        type: NotificationType.bookingRequest,
+        title: 'Nova solicitação de aula',
+        body: 'Pedro Henrique solicitou aula para quarta-feira às 14h.',
+        actionRoute: '/home/solicitacoes',
+        createdAt: now.subtract(const Duration(hours: 1)),
+      ),
+      AppNotification(
+        id: 'notif-003',
+        userId: currentInstructorId,
+        type: NotificationType.reminder,
+        title: 'Aula amanhã',
+        body:
+            'Você tem uma aula confirmada com Mariana Lima amanhã às 9h.',
+        actionRoute: '/home/agenda',
+        createdAt: now.subtract(const Duration(hours: 5)),
+      ),
+      AppNotification(
+        id: 'notif-004',
+        userId: currentInstructorId,
+        type: NotificationType.review,
+        title: 'Nova avaliação 5★',
+        body:
+            'Juliana Souza te avaliou: "Muito paciente e atencioso!"',
+        actionRoute: '/reviews',
+        readAt: now.subtract(const Duration(days: 3)),
+        createdAt: now.subtract(const Duration(days: 4)),
+      ),
+      AppNotification(
+        id: 'notif-005',
+        userId: currentInstructorId,
+        type: NotificationType.system,
+        title: 'Bem-vindo ao CNHhj!',
+        body:
+            'Cadastro aprovado. Agora você pode receber solicitações de alunos.',
+        readAt: now.subtract(const Duration(days: 28)),
+        createdAt: now.subtract(const Duration(days: 30)),
+      ),
+    ]);
   }
 }

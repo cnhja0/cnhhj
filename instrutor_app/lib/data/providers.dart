@@ -11,7 +11,9 @@ import 'repositories/mock/mock_availability_repository.dart';
 import 'repositories/mock/mock_booking_repository.dart';
 import 'repositories/mock/mock_chat_repository.dart';
 import 'repositories/mock/mock_instructor_repository.dart';
+import 'repositories/mock/mock_notification_repository.dart';
 import 'repositories/mock/mock_review_repository.dart';
+import 'repositories/notification_repository.dart';
 import 'repositories/review_repository.dart';
 
 /// Providers de repositórios. Cada um decide entre mock e supabase com base
@@ -62,6 +64,14 @@ final Provider<ReviewRepository> reviewRepositoryProvider =
   return switch (Env.mode) {
     AppMode.mock => MockReviewRepository(),
     AppMode.supabase => MockReviewRepository(),
+  };
+});
+
+final Provider<NotificationRepository> notificationRepositoryProvider =
+    Provider<NotificationRepository>((Ref ref) {
+  return switch (Env.mode) {
+    AppMode.mock => MockNotificationRepository(),
+    AppMode.supabase => MockNotificationRepository(),
   };
 });
 

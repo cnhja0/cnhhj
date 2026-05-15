@@ -107,16 +107,19 @@ class _ConversationTile extends StatelessWidget {
                   top: -2,
                   right: -2,
                   child: Container(
-                    width: 22,
-                    height: 22,
+                    width: 20,
+                    height: 20,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.error,
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.primary,
-                        width: 2,
-                      ),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: Color(0x33000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Text(
                       '$unread',
@@ -124,6 +127,7 @@ class _ConversationTile extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         color: AppColors.surface,
+                        height: 1,
                       ),
                     ),
                   ),

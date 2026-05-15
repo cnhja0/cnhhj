@@ -52,15 +52,18 @@ class CnhhjCard extends StatelessWidget {
           border: border,
           boxShadow: shadow
               ? const <BoxShadow>[
+                  // Sombra principal — larga e mais visível para depth real
                   BoxShadow(
-                    color: Color(0x14000000),
-                    blurRadius: 16,
-                    offset: Offset(0, 6),
+                    color: Color(0x29000000), // ~16% preto
+                    blurRadius: 20,
+                    offset: Offset(0, 8),
+                    spreadRadius: -2,
                   ),
+                  // Sombra de aproximação — faz o card "tocar" o fundo
                   BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
+                    color: Color(0x14000000), // ~8% preto
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
                   ),
                 ]
               : null,
