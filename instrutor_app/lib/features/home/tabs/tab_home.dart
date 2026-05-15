@@ -14,6 +14,7 @@ import '../../../data/providers.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../home_providers.dart';
 import '../home_state.dart';
+import '../widgets/home_banner.dart';
 
 /// Aba HOME — dashboard com saudação, indicadores principais e grid
 /// de acesso rápido para as outras funcionalidades.
@@ -104,6 +105,11 @@ class TabHome extends ConsumerWidget {
                 .animate()
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: -0.1, end: 0, curve: Curves.easeOutCubic),
+            const SizedBox(height: 14),
+            const HomeBanner()
+                .animate()
+                .fadeIn(delay: 80.ms, duration: 350.ms)
+                .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
             const SizedBox(height: 14),
             _StatsCard(
               instructor: instructorAsync.value,
