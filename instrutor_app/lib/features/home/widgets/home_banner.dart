@@ -10,8 +10,35 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../home_state.dart';
 
-/// Banner rotativo no topo da Home — 3 criativos que se alternam a cada 5s
+/// Banner rotativo no topo da Home — slides que se alternam a cada 5s
 /// com indicadores (dots) abaixo. Suporta swipe manual e tap em cada slide.
+///
+/// ╔══════════════════════════════════════════════════════════════════╗
+/// ║ Como adicionar/editar criativos                                  ║
+/// ╠══════════════════════════════════════════════════════════════════╣
+/// ║                                                                  ║
+/// ║ 1. CRIATIVO DE IMAGEM (banner pronto do designer):               ║
+/// ║                                                                  ║
+/// ║    a. Salve o arquivo em:                                        ║
+/// ║       instrutor_app/assets/images/banners/seu_nome.png           ║
+/// ║                                                                  ║
+/// ║    b. Adicione um _BannerSlide com imageAsset:                   ║
+/// ║       _BannerSlide.image(                                        ║
+/// ║         imageAsset: 'assets/images/banners/seu_nome.png',        ║
+/// ║         onTap: () => ...,                                        ║
+/// ║       )                                                          ║
+/// ║                                                                  ║
+/// ║    c. Dimensão recomendada: 720x310px (proporção 2.3:1)          ║
+/// ║       Formato: PNG ou JPG · até ~200KB cada                      ║
+/// ║                                                                  ║
+/// ║ 2. CRIATIVO DE TEXTO + ÍCONE (caso atual, sem imagem):           ║
+/// ║                                                                  ║
+/// ║    Use o construtor padrão _BannerSlide(...) com title,          ║
+/// ║    subtitle, icon, cores, actionLabel.                           ║
+/// ║                                                                  ║
+/// ║ Os indicadores embaixo ajustam automaticamente ao número de      ║
+/// ║ slides na lista.                                                 ║
+/// ╚══════════════════════════════════════════════════════════════════╝
 class HomeBanner extends ConsumerStatefulWidget {
   const HomeBanner({super.key});
 
@@ -58,8 +85,13 @@ class _HomeBannerState extends ConsumerState<HomeBanner> {
     _scheduleAutoAdvance();
   }
 
+  /// Lista dos criativos do banner.
+  ///
+  /// EDITE AQUI para trocar/adicionar criativos. Veja o cabeçalho da
+  /// classe [HomeBanner] para instruções detalhadas.
   List<_BannerSlide> _slides(BuildContext context, WidgetRef ref) {
     return <_BannerSlide>[
+      // ─── Criativo 1 — pitch da marca ────────────────────────────
       _BannerSlide(
         title: 'Sua CNH começa\naqui!',
         subtitle: 'Aulas completas com você',
@@ -72,6 +104,8 @@ class _HomeBannerState extends ConsumerState<HomeBanner> {
         actionLabel: 'Configurar aula',
         onTap: () => ref.read(tabIndexProvider.notifier).state = 1,
       ),
+
+      // ─── Criativo 2 — call to action de agenda ──────────────────
       _BannerSlide(
         title: 'Receba mais\nsolicitações',
         subtitle: 'Mantenha sua agenda atualizada',
@@ -84,6 +118,8 @@ class _HomeBannerState extends ConsumerState<HomeBanner> {
         actionLabel: 'Ver agenda',
         onTap: () => ref.read(tabIndexProvider.notifier).state = 3,
       ),
+
+      // ─── Criativo 3 — atalho pra edição de perfil ───────────────
       _BannerSlide(
         title: 'Complete seu\nperfil',
         subtitle: 'Foto e bio aumentam visibilidade',
@@ -96,6 +132,12 @@ class _HomeBannerState extends ConsumerState<HomeBanner> {
         actionLabel: 'Editar perfil',
         onTap: () => context.push(AppRoutes.profileEdit),
       ),
+
+      // ─── EXEMPLO de criativo com IMAGEM (descomente para usar) ──
+      // _BannerSlide.image(
+      //   imageAsset: 'assets/images/banners/banner_01.png',
+      //   onTap: () => context.push('/algum/destino'),
+      // ),
     ];
   }
 
@@ -143,7 +185,13 @@ class _HomeBannerState extends ConsumerState<HomeBanner> {
   }
 }
 
+/// Modelo de um slide do banner. Pode ser de dois tipos:
+///
+/// - **Texto + ícone** (construtor padrão): renderiza tipograficamente.
+/// - **Imagem** (construtor [_BannerSlide.image]): renderiza o asset
+///   fornecido como background full-bleed, sem texto sobreposto.
 class _BannerSlide {
+  /// Slide tipo "texto + ícone" — gerado por código.
   const _BannerSlide({
     required this.title,
     required this.subtitle,
@@ -155,8 +203,24 @@ class _BannerSlide {
     required this.iconColor,
     required this.actionLabel,
     required this.onTap,
-  });
+  }) : imageAsset = null;
 
+  /// Slide tipo "imagem" — usa um asset PNG/JPG como background.
+  /// Recomendado: 720x310px, ~200KB máx.
+  const _BannerSlide.image({
+    required String this.imageAsset,
+    required this.onTap,
+  })  : title = '',
+        subtitle = '',
+        icon = PhosphorIconsRegular.circle,
+        backgroundColor = AppColors.surface,
+        titleColor = AppColors.textPrimary,
+        subtitleColor = AppColors.textPrimary,
+        iconBackground = AppColors.textPrimary,
+        iconColor = AppColors.primary,
+        actionLabel = '';
+
+  final String? imageAsset;
   final String title;
   final String subtitle;
   final IconData icon;
@@ -167,10 +231,66 @@ class _BannerSlide {
   final Color iconColor;
   final String actionLabel;
   final VoidCallback onTap;
+
+  bool get isImage => imageAsset != null;
 }
 
 class _SlideCard extends StatelessWidget {
   const _SlideCard({required this.slide});
+  final _BannerSlide slide;
+
+  @override
+  Widget build(BuildContext context) {
+    if (slide.isImage) {
+      return _ImageSlide(slide: slide);
+    }
+    return _TextIconSlide(slide: slide);
+  }
+}
+
+/// Slide de imagem — asset PNG/JPG ocupa todo o card como background.
+class _ImageSlide extends StatelessWidget {
+  const _ImageSlide({required this.slide});
+  final _BannerSlide slide;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Material(
+        color: AppColors.textPrimary,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: slide.onTap,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Image.asset(
+                slide.imageAsset!,
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (BuildContext c, Object e, StackTrace? s) => Container(
+                  color: AppColors.surfaceOverlay,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    PhosphorIconsRegular.imageBroken,
+                    color: AppColors.textMuted,
+                    size: 36,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Slide de texto + ícone (criativo gerado por código).
+class _TextIconSlide extends StatelessWidget {
+  const _TextIconSlide({required this.slide});
   final _BannerSlide slide;
 
   @override
