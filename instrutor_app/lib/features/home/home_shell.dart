@@ -38,7 +38,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   static const List<_TabInfo> _tabs = <_TabInfo>[
     _TabInfo('Home',         PhosphorIconsRegular.house,         PhosphorIconsFill.house),
     _TabInfo('Aula',         PhosphorIconsRegular.steeringWheel, PhosphorIconsFill.steeringWheel),
-    _TabInfo('Solicitações', PhosphorIconsRegular.bellRinging,   PhosphorIconsFill.bellRinging),
+    _TabInfo('Solicitações', PhosphorIconsRegular.tray,          PhosphorIconsFill.tray),
     _TabInfo('Agenda',       PhosphorIconsRegular.calendarDots,  PhosphorIconsFill.calendarDots),
     _TabInfo('Mais',         PhosphorIconsRegular.dotsThree,     PhosphorIconsFill.dotsThree),
   ];

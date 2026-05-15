@@ -54,7 +54,7 @@ class TabHome extends ConsumerWidget {
         onTap: () => ref.read(tabIndexProvider.notifier).state = 1,
       ),
       _QuickAction(
-        icon: PhosphorIconsDuotone.bellRinging,
+        icon: PhosphorIconsDuotone.tray,
         label: 'Solicitações',
         badge: pendingCount.value ?? 0,
         onTap: () => ref.read(tabIndexProvider.notifier).state = 2,
