@@ -91,52 +91,36 @@ class _HomeBannerState extends ConsumerState<HomeBanner> {
   /// classe [HomeBanner] para instruções detalhadas.
   List<_BannerSlide> _slides(BuildContext context, WidgetRef ref) {
     return <_BannerSlide>[
-      // ─── Criativo 1 — pitch da marca ────────────────────────────
-      _BannerSlide(
-        title: 'Sua CNH começa\naqui!',
-        subtitle: 'Aulas completas com você',
-        icon: PhosphorIconsDuotone.steeringWheel,
-        backgroundColor: AppColors.textPrimary,
-        titleColor: AppColors.primary,
-        subtitleColor: AppColors.surface,
-        iconBackground: AppColors.primary,
-        iconColor: AppColors.textPrimary,
-        actionLabel: 'Configurar aula',
-        onTap: () => ref.read(tabIndexProvider.notifier).state = 1,
-      ),
-
-      // ─── Criativo 2 — call to action de agenda ──────────────────
-      _BannerSlide(
-        title: 'Receba mais\nsolicitações',
-        subtitle: 'Mantenha sua agenda atualizada',
-        icon: PhosphorIconsDuotone.calendarDots,
-        backgroundColor: AppColors.success,
-        titleColor: AppColors.surface,
-        subtitleColor: AppColors.surface,
-        iconBackground: AppColors.surface,
-        iconColor: AppColors.success,
-        actionLabel: 'Ver agenda',
-        onTap: () => ref.read(tabIndexProvider.notifier).state = 3,
-      ),
-
-      // ─── Criativo 3 — atalho pra edição de perfil ───────────────
-      _BannerSlide(
-        title: 'Complete seu\nperfil',
-        subtitle: 'Foto e bio aumentam visibilidade',
-        icon: PhosphorIconsDuotone.userCircle,
-        backgroundColor: AppColors.primaryLight,
-        titleColor: AppColors.textPrimary,
-        subtitleColor: AppColors.textSecondary,
-        iconBackground: AppColors.textPrimary,
-        iconColor: AppColors.primary,
-        actionLabel: 'Editar perfil',
+      // ─── Criativo 1 — "Termine seu cadastro" ────────────────────
+      _BannerSlide.image(
+        imageAsset: 'assets/images/banners/banner_01_termine_cadastro.png',
         onTap: () => context.push(AppRoutes.profileEdit),
       ),
 
-      // ─── EXEMPLO de criativo com IMAGEM (descomente para usar) ──
-      // _BannerSlide.image(
-      //   imageAsset: 'assets/images/banners/banner_01.png',
-      //   onTap: () => context.push('/algum/destino'),
+      // ─── Criativo 2 — "Como o CNHhj funciona" ───────────────────
+      _BannerSlide.image(
+        imageAsset: 'assets/images/banners/banner_02_como_funciona.png',
+        onTap: () => ref.read(tabIndexProvider.notifier).state = 4, // aba Mais
+      ),
+
+      // ─── Criativo 3 — "A fórmula: nota + alunos = R$" ───────────
+      _BannerSlide.image(
+        imageAsset: 'assets/images/banners/banner_03_formula_nota.png',
+        onTap: () => ref.read(tabIndexProvider.notifier).state = 1, // aba Aula
+      ),
+
+      // ─── EXEMPLOS de fallback texto+ícone (descomente para usar) ──
+      // _BannerSlide(
+      //   title: 'Sua CNH começa\naqui!',
+      //   subtitle: 'Aulas completas com você',
+      //   icon: PhosphorIconsDuotone.steeringWheel,
+      //   backgroundColor: AppColors.textPrimary,
+      //   titleColor: AppColors.primary,
+      //   subtitleColor: AppColors.surface,
+      //   iconBackground: AppColors.primary,
+      //   iconColor: AppColors.textPrimary,
+      //   actionLabel: 'Configurar aula',
+      //   onTap: () => ref.read(tabIndexProvider.notifier).state = 1,
       // ),
     ];
   }
