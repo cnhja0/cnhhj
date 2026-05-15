@@ -10,6 +10,7 @@ import '../../data/models/app_notification.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets/widgets.dart';
 import '../home/home_providers.dart';
+import '../home/home_state.dart';
 
 /// Abre o bottom sheet de notificações — não retira o usuário da aba atual.
 ///
@@ -243,9 +244,30 @@ class _NotificationTile extends ConsumerWidget {
               .read(notificationRepositoryProvider)
               .markAsRead(notification.id);
         }
-        if (notification.actionRoute != null && context.mounted) {
-          Navigator.of(context).pop(); // fecha o sheet
-          context.push(notification.actionRoute!);
+        if (!context.mounted) return;
+
+        // Resolve a rota: actionRoute explícita ou default do tipo.
+        final String? route =
+            notification.actionRoute ?? notification.type.defaultRoute;
+        if (route == null) return; // ex: aviso do sistema sem destino
+
+        Navigator.of(context).pop(); // sempre fecha o sheet primeiro
+
+        // Mapeia rotas das 5 abas para troca via tabIndexProvider
+        // (evita empilhar uma nova HomeShell em cima da atual).
+        const Map<String, int> tabRoutes = <String, int>{
+          '/home':              0,
+          '/home/aula':         1,
+          '/home/solicitacoes': 2,
+          '/home/agenda':       3,
+          '/home/mais':         4,
+        };
+
+        final int? tabIdx = tabRoutes[route];
+        if (tabIdx != null) {
+          ref.read(tabIndexProvider.notifier).state = tabIdx;
+        } else {
+          context.push(route);
         }
       },
       backgroundColor:

@@ -39,6 +39,17 @@ enum NotificationType {
         NotificationType.system           => 'Aviso',
         NotificationType.reminder         => 'Lembrete',
       };
+
+  /// Rota default para esse tipo, usada se a notificação não definir
+  /// explicitamente um `actionRoute`. Mantém a navegação coerente.
+  String? get defaultRoute => switch (this) {
+        NotificationType.bookingRequest   => '/home/solicitacoes',
+        NotificationType.bookingConfirmed => '/home/agenda',
+        NotificationType.bookingCancelled => '/home/agenda',
+        NotificationType.review           => '/reviews',
+        NotificationType.reminder         => '/home/agenda',
+        NotificationType.system           => null,
+      };
 }
 
 /// Notificação in-app. Armazenada no banco em produção; no MVP fica

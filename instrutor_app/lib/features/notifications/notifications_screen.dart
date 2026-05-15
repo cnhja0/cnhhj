@@ -112,11 +112,12 @@ class _NotificationTile extends ConsumerWidget {
               .read(notificationRepositoryProvider)
               .markAsRead(notification.id);
         }
-        if (notification.actionRoute != null && context.mounted) {
-          // pop + go pra evitar empilhar
-          context.pop();
-          context.push(notification.actionRoute!);
-        }
+        if (!context.mounted) return;
+        final String? route =
+            notification.actionRoute ?? notification.type.defaultRoute;
+        if (route == null) return;
+        context.pop();
+        context.push(route);
       },
       backgroundColor:
           unread ? AppColors.surface : AppColors.surface.withOpacity(0.7),
