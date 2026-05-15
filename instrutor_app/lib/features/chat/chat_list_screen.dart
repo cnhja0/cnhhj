@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/models/conversation.dart';
@@ -26,6 +28,10 @@ class ChatListScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.primary,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(PhosphorIconsRegular.arrowLeft),
+          onPressed: () => context.pop(),
+        ),
         title: const Text('Conversas'),
       ),
       body: async.when(
@@ -36,16 +42,26 @@ class ChatListScreen extends ConsumerWidget {
         data: (List<Conversation> convs) {
           if (convs.isEmpty) {
             return const CnhhjEmptyState(
-              icon: Icons.chat_bubble_outline,
-              message: 'Sem conversas ainda.\nQuando alunos te chamarem, elas aparecem aqui.',
+              icon: PhosphorIconsDuotone.chatCircleDots,
+              message:
+                  'Sem conversas ainda.\nQuando alunos te chamarem, elas aparecem aqui.',
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             itemCount: convs.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (BuildContext c, int i) =>
-                _ConversationTile(conversation: convs[i]),
+            itemBuilder: (BuildContext c, int i) {
+              return _ConversationTile(conversation: convs[i])
+                  .animate()
+                  .fadeIn(delay: (i * 60).ms, duration: 300.ms)
+                  .slideY(
+                    begin: 0.08,
+                    end: 0,
+                    curve: Curves.easeOutCubic,
+                  );
+            },
           );
         },
       ),
@@ -71,6 +87,10 @@ class _ConversationTile extends StatelessWidget {
         MockState.instance.messagesByConversation[conversation.id] ??
             const <Message>[];
     final Message? last = msgs.isEmpty ? null : msgs.last;
+    final int unread = msgs
+        .where((Message m) =>
+            m.senderId != conversation.instructorId && m.readAt == null)
+        .length;
     final DateFormat tf = DateFormat('HH:mm');
 
     return CnhhjCard(
@@ -78,7 +98,38 @@ class _ConversationTile extends StatelessWidget {
       onTap: () => context.push('/chats/${conversation.id}'),
       child: Row(
         children: <Widget>[
-          CnhhjAvatar(size: 48, fullName: name),
+          Stack(
+            clipBehavior: Clip.none,
+            children: <Widget>[
+              CnhhjAvatar(size: 52, fullName: name),
+              if (unread > 0)
+                Positioned(
+                  top: -2,
+                  right: -2,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    child: Text(
+                      '$unread',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.surface,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -89,9 +140,12 @@ class _ConversationTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -100,23 +154,38 @@ class _ConversationTile extends StatelessWidget {
                         tf.format(last.createdAt),
                         style: GoogleFonts.poppins(
                           fontSize: 11,
-                          color: AppColors.textMuted,
+                          color: unread > 0
+                              ? AppColors.textPrimary
+                              : AppColors.textMuted,
+                          fontWeight: unread > 0
+                              ? FontWeight.w800
+                              : FontWeight.w500,
                         ),
                       ),
                   ],
                 ),
-                if (last != null)
-                  Text(
-                    last.content,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  last?.content ?? 'Toque para iniciar a conversa',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    color: unread > 0
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                    fontWeight:
+                        unread > 0 ? FontWeight.w700 : FontWeight.w500,
                   ),
+                ),
               ],
             ),
+          ),
+          const SizedBox(width: 6),
+          const Icon(
+            PhosphorIconsRegular.caretRight,
+            size: 18,
+            color: AppColors.textMuted,
           ),
         ],
       ),

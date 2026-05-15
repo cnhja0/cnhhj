@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/models/conversation.dart';
@@ -49,7 +52,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             MockState.currentInstructorId;
     final bool? confirmed = await showCnhhjModal<bool>(
       context: context,
-      icon: Icons.block,
+      icon: PhosphorIconsRegular.prohibit,
       title: 'Bloquear este aluno?',
       message:
           'O aluno não conseguirá mais enviar mensagens nem agendar aulas com você.',
@@ -85,25 +88,44 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       backgroundColor: AppColors.primaryLight,
       appBar: AppBar(
         titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(PhosphorIconsRegular.arrowLeft),
+          onPressed: () => context.pop(),
+        ),
         title: Row(
           children: <Widget>[
             CnhhjAvatar(size: 36, fullName: otherName),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                otherName,
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    otherName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'Aluno',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         actions: <Widget>[
           IconButton(
-            icon: const Icon(Icons.block),
+            icon: const Icon(PhosphorIconsRegular.prohibit),
             tooltip: 'Bloquear',
             onPressed: _blockOther,
           ),
@@ -120,12 +142,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               data: (List<Message> msgs) {
                 if (msgs.isEmpty) {
                   return const CnhhjEmptyState(
-                    icon: Icons.chat_bubble_outline,
+                    icon: PhosphorIconsDuotone.chatCircleDots,
                     message: 'Nenhuma mensagem ainda.\nMande um oi!',
                   );
                 }
                 return ListView.builder(
                   controller: _scroll,
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
@@ -134,7 +157,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   itemBuilder: (BuildContext c, int i) {
                     final Message m = msgs[i];
                     final bool mine = m.senderId == userId;
-                    return _Bubble(message: m, mine: mine);
+                    return _Bubble(message: m, mine: mine)
+                        .animate()
+                        .fadeIn(duration: 250.ms)
+                        .slideX(
+                          begin: mine ? 0.1 : -0.1,
+                          end: 0,
+                          curve: Curves.easeOutCubic,
+                        );
                   },
                 );
               },
@@ -209,48 +239,106 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-class _Composer extends StatelessWidget {
+class _Composer extends StatefulWidget {
   const _Composer({required this.controller, required this.onSend});
   final TextEditingController controller;
   final VoidCallback onSend;
 
   @override
+  State<_Composer> createState() => _ComposerState();
+}
+
+class _ComposerState extends State<_Composer> {
+  bool _hasText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onChange);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onChange);
+    super.dispose();
+  }
+
+  void _onChange() {
+    final bool has = widget.controller.text.trim().isNotEmpty;
+    if (has != _hasText) setState(() => _hasText = has);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.surface,
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
       padding: EdgeInsets.only(
         left: 12,
-        right: 8,
+        right: 10,
         top: 8,
         bottom: 8 + MediaQuery.of(context).padding.bottom,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: <Widget>[
           Expanded(
             child: TextField(
-              controller: controller,
+              controller: widget.controller,
               minLines: 1,
               maxLines: 5,
               decoration: InputDecoration(
                 hintText: 'Mensagem',
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: AppColors.textMuted,
+                ),
                 filled: true,
                 fillColor: AppColors.primaryLight,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
                 ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 10,
+                  vertical: 12,
                 ),
               ),
               textInputAction: TextInputAction.send,
-              onSubmitted: (_) => onSend(),
+              onSubmitted: (_) => widget.onSend(),
             ),
           ),
-          IconButton(
-            onPressed: onSend,
-            icon: const Icon(Icons.send, color: AppColors.textPrimary),
+          const SizedBox(width: 6),
+          AnimatedScale(
+            scale: _hasText ? 1.0 : 0.85,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            child: Material(
+              color: _hasText ? AppColors.textPrimary : AppColors.disabled,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: _hasText ? widget.onSend : null,
+                child: const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Icon(
+                    PhosphorIconsFill.paperPlaneTilt,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

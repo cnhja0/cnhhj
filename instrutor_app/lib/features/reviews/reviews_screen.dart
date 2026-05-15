@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/models/enums.dart';
@@ -25,7 +28,13 @@ class ReviewsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.primary,
-      appBar: AppBar(title: const Text('Avaliações')),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(PhosphorIconsRegular.arrowLeft),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text('Avaliações'),
+      ),
       body: async.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.textPrimary),
@@ -33,23 +42,46 @@ class ReviewsScreen extends ConsumerWidget {
         error: (Object err, _) => Center(child: Text('Erro: $err')),
         data: (List<Review> reviews) {
           return ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             children: <Widget>[
               instAsync.maybeWhen(
-                data: (Instructor? i) => _Summary(instructor: i),
+                data: (Instructor? i) => _Summary(instructor: i)
+                    .animate()
+                    .fadeIn(duration: 350.ms)
+                    .slideY(
+                      begin: -0.05,
+                      end: 0,
+                      curve: Curves.easeOutCubic,
+                    ),
                 orElse: () => const SizedBox.shrink(),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               if (reviews.isEmpty)
-                const CnhhjEmptyState(
-                  icon: Icons.star_outline,
-                  message: 'Sem avaliações por enquanto.\nApós cada aula, os alunos podem te avaliar.',
+                const Padding(
+                  padding: EdgeInsets.only(top: 40),
+                  child: CnhhjEmptyState(
+                    icon: PhosphorIconsDuotone.star,
+                    message:
+                        'Sem avaliações por enquanto.\nApós cada aula, os alunos podem te avaliar.',
+                  ),
                 )
               else
-                ...reviews.map((Review r) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _ReviewCard(review: r),
-                    )),
+                for (int i = 0; i < reviews.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _ReviewCard(review: reviews[i])
+                        .animate()
+                        .fadeIn(
+                          delay: (100 + i * 70).ms,
+                          duration: 350.ms,
+                        )
+                        .slideY(
+                          begin: 0.1,
+                          end: 0,
+                          curve: Curves.easeOutCubic,
+                        ),
+                  ),
             ],
           );
         },
@@ -79,23 +111,40 @@ class _Summary extends StatelessWidget {
     final double avg = instructor?.averageRating ?? 0;
     final int total = instructor?.totalReviews ?? 0;
     return CnhhjCard(
+      border: Border.all(color: AppColors.textPrimary, width: 1.5),
       child: Column(
         children: <Widget>[
-          Text(
-            avg.toStringAsFixed(1),
-            style: GoogleFonts.poppins(
-              fontSize: 40,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              const Icon(
+                PhosphorIconsFill.star,
+                size: 36,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                avg.toStringAsFixed(1),
+                style: GoogleFonts.poppins(
+                  fontSize: 44,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -1,
+                  height: 1,
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 6),
           CnhhjStars(rating: avg, size: 22),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
-            'Baseado em $total avaliação${total == 1 ? '' : 'ões'}',
+            'Baseado em $total ${total == 1 ? 'avaliação' : 'avaliações'}',
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -119,7 +168,7 @@ class _ReviewCard extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              CnhhjAvatar(size: 36, fullName: name),
+              CnhhjAvatar(size: 40, fullName: name),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -129,7 +178,7 @@ class _ReviewCard extends StatelessWidget {
                       name,
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     CnhhjStars(rating: review.rating.toDouble(), size: 14),
@@ -141,18 +190,43 @@ class _ReviewCard extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: AppColors.textMuted,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
           if (review.comment != null && review.comment!.isNotEmpty) ...<Widget>[
             const SizedBox(height: 10),
-            Text(
-              review.comment!,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: AppColors.textPrimary,
-                height: 1.4,
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Icon(
+                    PhosphorIconsDuotone.quotes,
+                    size: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      review.comment!,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: AppColors.textPrimary,
+                        height: 1.4,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/widgets.dart';
 
-/// Tela "ANÁLISE EM PROCESSO" — visualmente fiel ao Figma, mas como o MVP
-/// tem aprovação automática, ela só fica visível por uns 2 segundos antes
-/// de auto-navegar para "Cadastro Finalizado".
+/// Tela "ANÁLISE EM PROCESSO" — visualmente fiel ao Figma. No MVP a
+/// aprovação é automática, então a tela só fica visível por ~2.5s antes
+/// de mandar para "Cadastro Finalizado".
 class AnalysisScreen extends ConsumerStatefulWidget {
   const AnalysisScreen({super.key});
 
@@ -20,7 +22,7 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(const Duration(milliseconds: 2200), () {
+    Future<void>.delayed(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
       context.go('/onboarding/finished');
     });
@@ -32,24 +34,44 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          const CnhhjLogo(size: 80),
-          const SizedBox(height: 48),
+          const CnhhjLogo(size: 80)
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .slideY(begin: -0.1, end: 0, curve: Curves.easeOutCubic),
+          const SizedBox(height: 40),
           CnhhjCard(
             padding: const EdgeInsets.all(28),
+            border: Border.all(color: AppColors.textPrimary, width: 1.5),
             child: Column(
               children: <Widget>[
-                const Icon(
-                  Icons.access_time_filled_rounded,
-                  size: 56,
-                  color: AppColors.textPrimary,
-                ),
-                const SizedBox(height: 16),
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryLight,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    PhosphorIconsDuotone.hourglassMedium,
+                    size: 52,
+                    color: AppColors.textPrimary,
+                  ),
+                )
+                    .animate(
+                        onPlay: (AnimationController c) => c.repeat())
+                    .rotate(
+                      duration: 1800.ms,
+                      curve: Curves.easeInOut,
+                    ),
+                const SizedBox(height: 18),
                 Text(
                   'ANÁLISE EM PROCESSO',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
+                    letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -59,12 +81,16 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     color: AppColors.textSecondary,
-                    height: 1.4,
+                    height: 1.5,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 400.ms)
+              .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
         ],
       ),
     );
