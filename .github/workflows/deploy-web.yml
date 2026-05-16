@@ -47,8 +47,37 @@ jobs:
 
       - name: Compilar Flutter Web
         working-directory: instrutor_app
-        # base-href precisa coincidir com o nome do repo (subpath do GitHub Pages)
-        run: flutter build web --release --base-href "/cnhhj/"
+        # base-href precisa coincidir com o nome do repo (subpath do GitHub Pages).
+        # --pwa-strategy=none desliga o service worker — sem isso o browser
+        # mantém uma versão antiga em cache mesmo após novo deploy (sintoma:
+        # "funciona em aba anônima"). Para MVP é o trade-off correto: o app
+        # carrega sempre fresco a cada visita, sem cache agressivo de PWA.
+        run: flutter build web --release --base-href "/cnhhj/" --pwa-strategy=none
+
+      - name: Injetar cache-control no index.html
+        working-directory: instrutor_app
+        # Garante que o index.html nunca seja servido a partir do cache do
+        # browser — assim toda visita busca o HTML do servidor, que por sua
+        # vez referencia os bundles JS/CSS hashados (esses sim podem ter
+        # cache longo, pois mudam de nome a cada build).
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('build/web/index.html')
+          html = p.read_text(encoding='utf-8')
+          meta = (
+              '  <meta http-equiv="Cache-Control" '
+              'content="no-cache, no-store, must-revalidate" />\n'
+              '  <meta http-equiv="Pragma" content="no-cache" />\n'
+              '  <meta http-equiv="Expires" content="0" />\n'
+          )
+          if 'Cache-Control' not in html:
+              html = html.replace('<head>', '<head>\n' + meta, 1)
+              p.write_text(html, encoding='utf-8')
+              print('cache-control meta injetado em index.html')
+          else:
+              print('cache-control ja presente — nada a fazer')
+          PY
 
       - name: Empacotar artifact
         uses: actions/upload-pages-artifact@v3

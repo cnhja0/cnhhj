@@ -78,18 +78,10 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         pageBuilder: (BuildContext context, GoRouterState state) =>
             _fadeSlidePage(child: const SignUpScreen(), state: state),
       ),
-      GoRoute(
-        path: '/onboarding/:step',
-        name: 'onboarding-step',
-        pageBuilder: (BuildContext context, GoRouterState state) {
-          final String stepStr = state.pathParameters['step'] ?? '1';
-          final int step = int.tryParse(stepStr) ?? 1;
-          return _fadeSlidePage(
-            child: OnboardingFlowScreen(step: step),
-            state: state,
-          );
-        },
-      ),
+      // IMPORTANTE: as rotas específicas (analysis, finished) precisam
+      // vir ANTES da genérica `/onboarding/:step`, senão `:step` engole
+      // 'analysis'/'finished' como parâmetro, `int.tryParse` falha e o
+      // usuário volta para o Step 1.
       GoRoute(
         path: '/onboarding/analysis',
         name: 'onboarding-analysis',
@@ -101,6 +93,18 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: 'onboarding-finished',
         pageBuilder: (BuildContext context, GoRouterState state) =>
             _fadeSlidePage(child: const FinishedScreen(), state: state),
+      ),
+      GoRoute(
+        path: '/onboarding/:step',
+        name: 'onboarding-step',
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          final String stepStr = state.pathParameters['step'] ?? '1';
+          final int step = int.tryParse(stepStr) ?? 1;
+          return _fadeSlidePage(
+            child: OnboardingFlowScreen(step: step),
+            state: state,
+          );
+        },
       ),
       // ─── Home (5 abas via IndexedStack: Home, Aula, Solicit., Agenda, Mais) ──
       GoRoute(
