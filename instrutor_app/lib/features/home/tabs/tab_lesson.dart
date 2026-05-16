@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/enums.dart';
 import '../../../data/models/instructor.dart';
+import '../../../data/models/weekly_availability.dart';
 import '../../../data/providers.dart';
 import '../../../data/repositories/instructor_repository.dart';
 import '../../../shared/widgets/widgets.dart';
@@ -61,6 +62,12 @@ class _TabLessonState extends ConsumerState<TabLesson> {
     final String userId = ref.read(currentUserIdProvider);
     final Instructor? i =
         await ref.read(instructorRepositoryProvider).getById(userId);
+    // L2: carrega disponibilidade semanal salva. Sem isso, ao reabrir a
+    // aba o instrutor sempre via "Dom-Sáb vazios" e parecia que tinha
+    // perdido a configuração.
+    final List<WeeklyAvailability> slots = await ref
+        .read(availabilityRepositoryProvider)
+        .listForInstructor(userId);
     if (!mounted) return;
     setState(() {
       _instructor = i;
@@ -69,6 +76,16 @@ class _TabLessonState extends ConsumerState<TabLesson> {
       _priceController.text =
           i?.pricePerClass == null ? '' : i!.pricePerClass!.toStringAsFixed(2);
       _state = i?.state;
+      _selectedDays
+        ..clear()
+        ..addAll(slots.map((WeeklyAvailability s) => s.dayOfWeek));
+      // Se já há slots salvos, usa o startTime/endTime do primeiro como
+      // janela default (MVP: janela única por dia, mesma para todos os
+      // dias selecionados).
+      if (slots.isNotEmpty) {
+        _startTime = slots.first.startTime;
+        _endTime = slots.first.endTime;
+      }
       _loading = false;
     });
   }
@@ -85,6 +102,22 @@ class _TabLessonState extends ConsumerState<TabLesson> {
   }
 
   Future<void> _save() async {
+    // L3: valida UF/cidade/bairro antes de tudo. Sem endereço, o aluno
+    // não consegue filtrar por região na vitrine.
+    final String neighborhood = _neighborhoodController.text.trim();
+    final String city = _cityController.text.trim();
+    if (_state == null) {
+      CnhhjSnack.error(context, 'Selecione a UF.');
+      return;
+    }
+    if (city.length < 2) {
+      CnhhjSnack.error(context, 'Informe a cidade.');
+      return;
+    }
+    if (neighborhood.length < 2) {
+      CnhhjSnack.error(context, 'Informe o bairro.');
+      return;
+    }
     if (_priceController.text.trim().isEmpty) {
       CnhhjSnack.error(context, 'Informe o valor por aula.');
       return;
@@ -99,20 +132,47 @@ class _TabLessonState extends ConsumerState<TabLesson> {
       CnhhjSnack.error(context, 'Selecione pelo menos um dia da semana.');
       return;
     }
+    // Janela horária — startTime tem que ser ANTES de endTime, senão a
+    // grade gerada vira intervalos vazios.
+    final double startMin = _startTime.hour * 60.0 + _startTime.minute;
+    final double endMin = _endTime.hour * 60.0 + _endTime.minute;
+    if (endMin <= startMin) {
+      CnhhjSnack.error(context, 'O horário "Até" deve ser após "De".');
+      return;
+    }
 
     setState(() => _saving = true);
     final String id = ref.read(currentUserIdProvider);
     try {
+      // 1) Dados do instrutor (endereço + preço).
       final Instructor updated =
           await ref.read(instructorRepositoryProvider).upsert(
                 id,
                 InstructorUpdate(
-                  neighborhood: _neighborhoodController.text.trim(),
-                  city: _cityController.text.trim(),
+                  neighborhood: neighborhood,
+                  city: city,
                   state: _state,
                   pricePerClass: price,
                 ),
               );
+
+      // 2) L1: grade semanal — substitui tudo pelo conjunto atual.
+      // No MVP é uma janela única por dia, replicada nos dias selecionados.
+      final DateTime now = DateTime.now();
+      final List<WeeklyAvailability> slots = _selectedDays.map((DayOfWeek d) {
+        return WeeklyAvailability(
+          id: 'avail-${now.microsecondsSinceEpoch}-${d.value}',
+          instructorId: id,
+          dayOfWeek: d,
+          startTime: _startTime,
+          endTime: _endTime,
+          createdAt: now,
+        );
+      }).toList(growable: false);
+      await ref
+          .read(availabilityRepositoryProvider)
+          .replaceAll(id, slots);
+
       ref.invalidate(currentInstructorProvider);
       if (!mounted) return;
       setState(() => _instructor = updated);

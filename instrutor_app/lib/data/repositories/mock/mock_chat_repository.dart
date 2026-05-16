@@ -1,11 +1,19 @@
 import 'dart:async';
 
+import '../../models/app_notification.dart';
 import '../../models/conversation.dart';
 import '../../models/message.dart';
 import '../chat_repository.dart';
+import '../notification_repository.dart';
 import '_seed.dart';
 
 class MockChatRepository implements ChatRepository {
+  MockChatRepository({this.notifications});
+
+  /// Quando provido, emite `AppNotification` ao destinatário a cada
+  /// mensagem nova (mantém o badge ativo em runtime).
+  final NotificationRepository? notifications;
+
   final StreamController<String> _conversationChanges =
       StreamController<String>.broadcast();
   final StreamController<String> _convListChanges =
@@ -82,6 +90,31 @@ class MockChatRepository implements ChatRepository {
     }
     _conversationChanges.add(conversationId);
     _convListChanges.add(conversationId);
+
+    // C4: notifica o destinatário. Side-effect; falha não desfaz o envio.
+    if (notifications != null && idx != -1) {
+      final Conversation conv = MockState.instance.conversations[idx];
+      final String recipientId =
+          conv.studentId == senderId ? conv.instructorId : conv.studentId;
+      if (recipientId != senderId) {
+        try {
+          await notifications!.create(
+            AppNotification(
+              id: 'notif-${msg.createdAt.millisecondsSinceEpoch.toRadixString(36)}-m',
+              userId: recipientId,
+              type: NotificationType.system,
+              title: 'Nova mensagem',
+              body: content.length > 80
+                  ? '${content.substring(0, 80)}…'
+                  : content,
+              createdAt: msg.createdAt,
+              actionRoute: '/chats/$conversationId',
+            ),
+          );
+        } catch (_) {}
+      }
+    }
+
     return msg;
   }
 
@@ -94,12 +127,19 @@ class MockChatRepository implements ChatRepository {
         MockState.instance.messagesByConversation[conversationId];
     if (msgs == null) return;
     final DateTime now = DateTime.now();
+    bool changed = false;
     for (int i = 0; i < msgs.length; i++) {
       if (msgs[i].senderId != readerId && msgs[i].readAt == null) {
         msgs[i] = msgs[i].copyWith(readAt: now);
+        changed = true;
       }
     }
-    _conversationChanges.add(conversationId);
+    if (changed) {
+      _conversationChanges.add(conversationId);
+      // C2: também atualiza a LISTA de conversas — sem isso o badge
+      // de "não lidas" na lista fica preso até a próxima mensagem nova.
+      _convListChanges.add(conversationId);
+    }
   }
 
   @override

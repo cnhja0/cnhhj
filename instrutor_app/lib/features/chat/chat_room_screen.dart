@@ -26,6 +26,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   final ScrollController _scroll = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    // C1: marca todas as mensagens recebidas como lidas ao abrir o chat.
+    // O markAsRead do mock também emite no stream da lista de conversas,
+    // o que zera o badge unread imediatamente.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _markRead());
+  }
+
+  Future<void> _markRead() async {
+    final String userId =
+        ref.read(authRepositoryProvider).currentSession?.userId ??
+            MockState.currentInstructorId;
+    await ref.read(chatRepositoryProvider).markAsRead(
+          conversationId: widget.conversationId,
+          readerId: userId,
+        );
+  }
+
+  @override
   void dispose() {
     _input.dispose();
     _scroll.dispose();

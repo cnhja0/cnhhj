@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import '../../data/models/enums.dart';
@@ -50,6 +51,57 @@ class OnboardingDraft {
   final File? profilePhoto;
   final File? cnhPhoto;
   final File? detranCertificate;
+
+  /// Serializa apenas os campos *textuais* — fotos (`File`) não persistem
+  /// entre kills do app porque o SO pode limpar o cache. O usuário precisa
+  /// re-tirar fotos se voltar mais tarde, mas não perde nome/CPF/veículo.
+  String toJsonString() => jsonEncode(<String, dynamic>{
+        'fullName': fullName,
+        'cpf': cpf,
+        'gender': gender?.toJson(),
+        'birthDate': birthDate?.toIso8601String(),
+        'phone': phone,
+        'vehicleType': vehicleType?.toJson(),
+        'categories':
+            categories.map((VehicleCategory c) => c.toJson()).toList(),
+        'vehicleBrand': vehicleBrand,
+        'vehicleModel': vehicleModel,
+        'vehicleYear': vehicleYear,
+        'vehicleTransmission': vehicleTransmission?.toJson(),
+        'vehiclePlate': vehiclePlate,
+      });
+
+  static OnboardingDraft? tryFromJsonString(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final Map<String, dynamic> j = jsonDecode(raw) as Map<String, dynamic>;
+      return OnboardingDraft(
+        fullName: j['fullName'] as String?,
+        cpf: j['cpf'] as String?,
+        gender:
+            j['gender'] == null ? null : Gender.fromJson(j['gender'] as String),
+        birthDate: j['birthDate'] == null
+            ? null
+            : DateTime.tryParse(j['birthDate'] as String),
+        phone: j['phone'] as String?,
+        vehicleType: j['vehicleType'] == null
+            ? null
+            : VehicleType.fromJson(j['vehicleType'] as String),
+        categories: ((j['categories'] as List<dynamic>?) ?? <dynamic>[])
+            .map((dynamic c) => VehicleCategory.fromJson(c as String))
+            .toList(growable: false),
+        vehicleBrand: j['vehicleBrand'] as String?,
+        vehicleModel: j['vehicleModel'] as String?,
+        vehicleYear: (j['vehicleYear'] as num?)?.toInt(),
+        vehicleTransmission: j['vehicleTransmission'] == null
+            ? null
+            : Transmission.fromJson(j['vehicleTransmission'] as String),
+        vehiclePlate: j['vehiclePlate'] as String?,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   OnboardingDraft copyWith({
     String? fullName,

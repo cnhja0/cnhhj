@@ -10,7 +10,6 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/instructor.dart';
 import '../../../data/models/profile.dart';
-import '../../../data/providers.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../home_providers.dart';
 import '../home_state.dart';
@@ -28,7 +27,7 @@ class TabHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<Profile?> profileAsync =
-        ref.watch(_currentProfileProvider);
+        ref.watch(currentProfileProvider);
     final AsyncValue<Instructor?> instructorAsync =
         ref.watch(currentInstructorProvider);
     final AsyncValue<int> pendingCount =
@@ -165,17 +164,6 @@ class _QuickAction {
   final int? badge;
   final VoidCallback? onTap;
 }
-
-// Profile provider local (não compartilhado, já está em home_providers o
-// resto). Mantido aqui pois só TabHome consome.
-final FutureProvider<Profile?> _currentProfileProvider =
-    FutureProvider<Profile?>((Ref ref) async {
-  try {
-    return await ref.watch(authRepositoryProvider).currentProfile();
-  } catch (_) {
-    return null;
-  }
-});
 
 // ─── Card único de stats (3 chips horizontais com divisores) ─────────
 class _StatsCard extends StatelessWidget {

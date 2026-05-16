@@ -52,6 +52,13 @@ class MockNotificationRepository implements NotificationRepository {
     _changes.add(userId);
   }
 
+  @override
+  Future<AppNotification> create(AppNotification notification) async {
+    MockState.instance.notifications.add(notification);
+    _changes.add(notification.userId);
+    return notification;
+  }
+
   List<AppNotification> _forUser(String userId) {
     final List<AppNotification> filtered = MockState.instance.notifications
         .where((AppNotification n) => n.userId == userId)

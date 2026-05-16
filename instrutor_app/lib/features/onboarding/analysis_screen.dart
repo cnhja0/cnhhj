@@ -9,8 +9,10 @@ import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/widgets.dart';
 
 /// Tela "ANÁLISE EM PROCESSO" — visualmente fiel ao Figma. No MVP a
-/// aprovação é automática, então a tela só fica visível por ~2.5s antes
-/// de mandar para "Cadastro Finalizado".
+/// aprovação é automática (definida no `signUpWithEmail` do auth mock),
+/// então só esperamos uma janela de UI antes de seguir para "Cadastro
+/// Finalizado". Quando trocarmos pra Supabase, esta tela passa a observar
+/// `Profile.approvalStatus` e só navega quando vira `approved`.
 class AnalysisScreen extends ConsumerStatefulWidget {
   const AnalysisScreen({super.key});
 
@@ -22,6 +24,10 @@ class _AnalysisScreenState extends ConsumerState<AnalysisScreen> {
   @override
   void initState() {
     super.initState();
+    // Janela cosmética de 2.5s para o usuário perceber o status. Em
+    // produção, substituir por `ref.listen(currentProfileProvider, ...)`
+    // detectando transição para ApprovalStatus.approved (e rejected →
+    // tela de erro). Hoje o profile já nasce approved no signup.
     Future<void>.delayed(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
       context.go('/onboarding/finished');

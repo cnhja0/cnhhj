@@ -43,35 +43,42 @@ final Provider<AvailabilityRepository> availabilityRepositoryProvider =
   };
 });
 
-final Provider<BookingRepository> bookingRepositoryProvider =
-    Provider<BookingRepository>((Ref ref) {
-  return switch (Env.mode) {
-    AppMode.mock => MockBookingRepository(),
-    AppMode.supabase => MockBookingRepository(),
-  };
-});
-
-final Provider<ChatRepository> chatRepositoryProvider =
-    Provider<ChatRepository>((Ref ref) {
-  return switch (Env.mode) {
-    AppMode.mock => MockChatRepository(),
-    AppMode.supabase => MockChatRepository(),
-  };
-});
-
-final Provider<ReviewRepository> reviewRepositoryProvider =
-    Provider<ReviewRepository>((Ref ref) {
-  return switch (Env.mode) {
-    AppMode.mock => MockReviewRepository(),
-    AppMode.supabase => MockReviewRepository(),
-  };
-});
-
+// IMPORTANTE: NotificationRepository é declarado ANTES dos outros porque
+// booking/chat/review o injetam para emitir eventos em runtime. Riverpod
+// resolve lazy — a ordem das declarações não importa em runtime, mas
+// mantemos visualmente coerente.
 final Provider<NotificationRepository> notificationRepositoryProvider =
     Provider<NotificationRepository>((Ref ref) {
   return switch (Env.mode) {
     AppMode.mock => MockNotificationRepository(),
     AppMode.supabase => MockNotificationRepository(),
+  };
+});
+
+final Provider<BookingRepository> bookingRepositoryProvider =
+    Provider<BookingRepository>((Ref ref) {
+  final NotificationRepository notif = ref.watch(notificationRepositoryProvider);
+  return switch (Env.mode) {
+    AppMode.mock => MockBookingRepository(notifications: notif),
+    AppMode.supabase => MockBookingRepository(notifications: notif),
+  };
+});
+
+final Provider<ChatRepository> chatRepositoryProvider =
+    Provider<ChatRepository>((Ref ref) {
+  final NotificationRepository notif = ref.watch(notificationRepositoryProvider);
+  return switch (Env.mode) {
+    AppMode.mock => MockChatRepository(notifications: notif),
+    AppMode.supabase => MockChatRepository(notifications: notif),
+  };
+});
+
+final Provider<ReviewRepository> reviewRepositoryProvider =
+    Provider<ReviewRepository>((Ref ref) {
+  final NotificationRepository notif = ref.watch(notificationRepositoryProvider);
+  return switch (Env.mode) {
+    AppMode.mock => MockReviewRepository(notifications: notif),
+    AppMode.supabase => MockReviewRepository(notifications: notif),
   };
 });
 

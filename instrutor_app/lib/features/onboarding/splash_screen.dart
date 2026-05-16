@@ -7,8 +7,10 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/models/instructor.dart';
 import '../../data/providers.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/instructor_repository.dart';
 import '../../shared/widgets/cnhhj_logo.dart';
 
 /// Tela inicial. Carrega por ~2 segundos enquanto:
@@ -44,10 +46,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     ]);
 
     if (!mounted) return;
-    if (auth.currentSession != null) {
+    final AuthSession? session = auth.currentSession;
+    if (session == null) {
+      context.go(AppRoutes.login);
+      return;
+    }
+
+    // A1: sessão válida não basta — precisa também ter terminado o
+    // onboarding. Sem isso o usuário cai na Home com Instructor=null e
+    // tudo (Home, Aula, Perfil) renderiza com placeholders. Se faltam
+    // dados mínimos (tipo + marca + placa + CNH), volta pra step 1.
+    final InstructorRepository repo = ref.read(instructorRepositoryProvider);
+    final Instructor? inst = await repo.getById(session.userId);
+    if (!mounted) return;
+
+    final bool onboardingDone = inst != null &&
+        inst.vehicleBrand?.isNotEmpty == true &&
+        inst.vehicleModel?.isNotEmpty == true &&
+        inst.vehiclePlate?.isNotEmpty == true &&
+        inst.cnhPhotoUrl?.isNotEmpty == true;
+
+    if (onboardingDone) {
       context.go(AppRoutes.home);
     } else {
-      context.go(AppRoutes.login);
+      context.go('/onboarding/1');
     }
   }
 

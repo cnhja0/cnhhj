@@ -4,13 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/profile.dart';
 import '../../../data/providers.dart';
+import '../../../features/onboarding/onboarding_controller.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../home_providers.dart';
+import '../home_state.dart';
 
 /// Aba MAIS — menu com Perfil, Conversas, Avaliações, Guia, Suporte, Sair.
 class TabMore extends ConsumerWidget {
@@ -20,6 +23,26 @@ class TabMore extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> logout() async {
       await ref.read(authRepositoryProvider).signOut();
+      // A3: zera estado do usuário anterior para não vazar para a próxima
+      // conta logada no mesmo device. Inclui draft do onboarding (com CPF,
+      // fotos etc.), perfil/instructor em cache, e índice da aba.
+      //
+      // Importante: também limpamos o SharedPreferences do draft. Sem isso,
+      // o invalidate só descarta o estado em memória — quando o próximo
+      // usuário entrar no onboarding, o `_restore()` carregaria os dados
+      // do anterior.
+      try {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove('onboarding.draft');
+      } catch (_) {}
+      ref.invalidate(onboardingControllerProvider);
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(currentInstructorProvider);
+      ref.invalidate(pendingBookingsCountProvider);
+      ref.invalidate(confirmedBookingsCountProvider);
+      ref.invalidate(conversationsCountProvider);
+      ref.invalidate(notificationsProvider);
+      ref.read(tabIndexProvider.notifier).state = 0;
       if (!context.mounted) return;
       context.go(AppRoutes.login);
     }
