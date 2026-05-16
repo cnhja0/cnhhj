@@ -35,6 +35,7 @@ class MockInstructorRepository implements InstructorRepository {
       vehiclePlate: patch.vehiclePlate,
       vehiclePhotoFrontUrl: patch.vehiclePhotoFrontUrl,
       vehiclePhotoBackUrl: patch.vehiclePhotoBackUrl,
+      vehicleLastChangedAt: patch.vehicleLastChangedAt,
       categories: patch.categories,
       pricePerClass: patch.pricePerClass,
       isActive: patch.isActive,

@@ -58,6 +58,10 @@ class ProfileEditController extends Notifier<ProfileEditState> {
     String? vehiclePlate,
     String? vehiclePhotoFrontUrl,
     String? vehiclePhotoBackUrl,
+    /// Quando o caller detecta que houve mudança real nos dados do veículo,
+    /// passa `true` para o repo gravar `vehicleLastChangedAt = now` —
+    /// trava o cooldown de 7 dias.
+    bool vehicleChanged = false,
   }) async {
     state = const ProfileEditState(saving: true);
     try {
@@ -97,6 +101,8 @@ class ProfileEditController extends Notifier<ProfileEditState> {
             vehiclePlate: vehiclePlate,
             vehiclePhotoFrontUrl: vehiclePhotoFrontUrl,
             vehiclePhotoBackUrl: vehiclePhotoBackUrl,
+            vehicleLastChangedAt:
+                vehicleChanged ? DateTime.now() : null,
           ),
         );
       }

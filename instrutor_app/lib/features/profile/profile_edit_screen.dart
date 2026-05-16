@@ -25,14 +25,16 @@ import 'profile_edit_controller.dart';
 /// Tela de edição do perfil do instrutor.
 ///
 /// Seções:
-///   • Avatar
-///   • Dados pessoais (nome, CPF, data nasc., sexo)
-///   • Contato (celular)
-///   • Sobre você (bio)
-///   • Veículo (tipo, marca/modelo via FIPE, ano, transmissão, placa, fotos)
+///   • Avatar (editável)
+///   • Identidade (nome / CPF / data nasc. / sexo) — **somente leitura**.
+///     Definidos no cadastro inicial e não podem ser alterados pelo app
+///     (integridade dos documentos enviados ao DETRAN).
+///   • Contato (celular) — editável.
+///   • Sobre você (bio) — editável.
+///   • Veículo — editável, com cooldown de 7 dias entre mudanças
+///     (anti-fraude: evita instrutor cadastrar 5 carros em 5 dias).
 ///
-/// Os dados do veículo aparecem para o aluno na vitrine — daí estarem
-/// editáveis aqui, fora do onboarding.
+/// Os dados do veículo aparecem para o aluno na vitrine.
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
 
@@ -44,14 +46,16 @@ class ProfileEditScreen extends ConsumerStatefulWidget {
 class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   // ─── Form ──────────────────────────────────────────────────────────
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _cpfController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
 
-  // ─── Pessoal ───────────────────────────────────────────────────────
+  // ─── Identidade (somente leitura — vem do cadastro) ───────────────
+  String _fullName = '';
+  String? _cpf;
   DateTime? _birthDate;
   Gender? _gender;
+
+  // ─── Avatar (editável) ────────────────────────────────────────────
   File? _newAvatar;
   String? _currentAvatarUrl;
 
@@ -84,10 +88,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   bool _loading = true;
   bool _dirty = false;
 
-  final MaskTextInputFormatter _cpfMask = MaskTextInputFormatter(
-    mask: '###.###.###-##',
-    filter: <String, RegExp>{'#': RegExp(r'[0-9]')},
-  );
   final MaskTextInputFormatter _phoneMask = MaskTextInputFormatter(
     mask: '(##) #####-####',
     filter: <String, RegExp>{'#': RegExp(r'[0-9]')},
@@ -105,8 +105,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
-    _nameController.addListener(_markDirty);
-    _cpfController.addListener(_markDirty);
     _phoneController.addListener(_markDirty);
     _bioController.addListener(_markDirty);
     _brandController.addListener(_markDirty);
@@ -117,8 +115,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _cpfController.dispose();
     _phoneController.dispose();
     _bioController.dispose();
     _brandController.dispose();
@@ -148,15 +144,17 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       if (!mounted) return;
       setState(() {
         _originalInstructor = instructor;
-        _nameController.text = profile.fullName;
-        _cpfController.text = profile.cpf ?? '';
-        _phoneController.text = profile.phone ?? '';
-        _bioController.text = instructor?.bio ?? '';
+        // Identidade — só pra display.
+        _fullName = profile.fullName;
+        _cpf = profile.cpf;
         _birthDate = profile.birthDate;
         _gender = profile.gender;
         _currentAvatarUrl = profile.avatarUrl;
+        // Editáveis.
+        _phoneController.text = profile.phone ?? '';
+        _bioController.text = instructor?.bio ?? '';
 
-        // Veículo
+        // Veículo — já cadastrado no onboarding, então pré-popula tudo.
         _vehicleType = instructor?.vehicleType;
         _transmission = instructor?.vehicleTransmission;
         _brandController.text = instructor?.vehicleBrand ?? '';
@@ -168,6 +166,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         _currentVehicleFrontUrl = instructor?.vehiclePhotoFrontUrl;
         _currentVehicleBackUrl = instructor?.vehiclePhotoBackUrl;
 
+        // UX: quem já tem veículo cadastrado vê os campos como texto
+        // editável (modo manual). O picker FIPE não consegue marcar o
+        // brand "selecionado" sem ter o código da FIPE (que não guardamos).
+        // Se o usuário quiser trocar, clica em "Buscar no catálogo FIPE".
+        _vehicleManualMode = instructor?.vehicleBrand?.isNotEmpty == true;
+
         _loading = false;
         _dirty = false;
       });
@@ -175,6 +179,31 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       if (!mounted) return;
       setState(() => _loading = false);
     }
+  }
+
+  // ─── Cooldown de veículo ───────────────────────────────────────────
+  static const Duration _vehicleCooldown = Duration(days: 7);
+
+  /// Quanto falta para o instrutor poder mudar o veículo de novo.
+  /// `Duration.zero` (ou negativo) = já pode mudar.
+  Duration get _vehicleCooldownRemaining {
+    final DateTime? last = _originalInstructor?.vehicleLastChangedAt;
+    if (last == null) return Duration.zero;
+    final Duration elapsed = DateTime.now().difference(last);
+    final Duration left = _vehicleCooldown - elapsed;
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  bool get _vehicleLocked => _vehicleCooldownRemaining > Duration.zero;
+
+  String get _cooldownLabel {
+    final Duration d = _vehicleCooldownRemaining;
+    final int days = d.inDays;
+    if (days > 0) return '$days ${days == 1 ? "dia" : "dias"}';
+    final int hours = d.inHours;
+    if (hours > 0) return '$hours ${hours == 1 ? "hora" : "horas"}';
+    final int minutes = d.inMinutes;
+    return '$minutes min';
   }
 
   // ─── Foto de perfil ────────────────────────────────────────────────
@@ -271,10 +300,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   // ─── Save ──────────────────────────────────────────────────────────
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_birthDate == null) {
-      CnhhjSnack.error(context, 'Informe sua data de nascimento.');
-      return;
-    }
 
     final String userId =
         ref.read(authRepositoryProvider).currentSession?.userId ??
@@ -312,6 +337,21 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     ? ''
                     : Validators.normalizePlate(orig.vehiclePlate!)));
 
+    // Mudança de foto do veículo também conta como alteração de veículo
+    // (sujeito ao cooldown).
+    final bool vehiclePhotoChanged =
+        _newVehicleFrontPhoto != null || _newVehicleBackPhoto != null;
+    final bool anyVehicleChange = vehicleChanged || vehiclePhotoChanged;
+
+    if (anyVehicleChange && _vehicleLocked) {
+      CnhhjSnack.error(
+        context,
+        'Você pode alterar o veículo a cada 7 dias. '
+        'Próxima alteração em $_cooldownLabel.',
+      );
+      return;
+    }
+
     if (vehicleChanged) {
       final List<String> missing = <String>[
         if (_vehicleType == null) 'tipo',
@@ -328,8 +368,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         );
         return;
       }
-      // Re-valida placa explicitamente (validator no campo é opcional;
-      // aqui já decidimos que é obrigatória).
       final String? plateErr = Validators.plate(plate);
       if (plateErr != null) {
         CnhhjSnack.error(context, 'Placa: $plateErr');
@@ -346,12 +384,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         .read(profileEditControllerProvider.notifier)
         .save(
           userId: userId,
-          fullName: _nameController.text.trim(),
-          cpf: _cpfController.text.trim().isEmpty
-              ? null
-              : _cpfController.text.trim(),
-          birthDate: _birthDate,
-          gender: _gender,
+          // Identidade é imutável após cadastro — passa o valor original
+          // para o controller (que ainda exige fullName não-nulo). cpf/
+          // birthDate/gender NÃO vão; o repo preserva os existentes.
+          fullName: _fullName,
           phone: _phoneController.text.trim().isEmpty
               ? null
               : _phoneController.text.trim(),
@@ -365,6 +401,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           vehicleYear: int.tryParse(yearStr),
           vehicleTransmission: _transmission,
           vehiclePlate: plate.isEmpty ? null : Validators.normalizePlate(plate),
+          vehicleChanged: anyVehicleChange,
           vehiclePhotoFrontUrl:
               _newVehicleFrontPhoto?.path ?? _currentVehicleFrontUrl,
           vehiclePhotoBackUrl:
@@ -486,7 +523,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                             _AvatarEditor(
                               file: _newAvatar,
                               currentUrl: _currentAvatarUrl,
-                              name: _nameController.text,
+                              name: _fullName,
                               onTap: _pickAvatar,
                             )
                                 .animate()
@@ -498,58 +535,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                 ),
                             const SizedBox(height: 16),
                             _Section(
-                              title: 'Dados pessoais',
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
-                                children: <Widget>[
-                                  CnhhjTextField(
-                                    controller: _nameController,
-                                    label: 'Nome completo',
-                                    icon: PhosphorIconsRegular.user,
-                                    textInputAction: TextInputAction.next,
-                                    validator: Validators.fullName,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  CnhhjTextField(
-                                    controller: _cpfController,
-                                    label: 'CPF',
-                                    hint: '000.000.000-00',
-                                    icon: PhosphorIconsRegular
-                                        .identificationCard,
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters:
-                                        <TextInputFormatter>[_cpfMask],
-                                    textInputAction: TextInputAction.next,
-                                    validator: (String? v) =>
-                                        (v == null || v.trim().isEmpty)
-                                            ? null
-                                            : Validators.cpf(v),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  CnhhjDateField(
-                                    label: 'Data de nascimento',
-                                    initialDate: _birthDate,
-                                    firstDate: DateTime(1900),
-                                    lastDate: DateTime.now().subtract(
-                                        const Duration(days: 365 * 18)),
-                                    onChanged: (DateTime d) => setState(() {
-                                      _birthDate = d;
-                                      _dirty = true;
-                                    }),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  CnhhjDropdown<Gender>(
-                                    label: 'Sexo',
-                                    value: _gender,
-                                    items: Gender.values,
-                                    itemLabel: (Gender g) => g.label,
-                                    onChanged: (Gender? g) => setState(() {
-                                      _gender = g;
-                                      _dirty = true;
-                                    }),
-                                  ),
-                                ],
+                              title: 'Identidade · não editável',
+                              child: _IdentityCard(
+                                fullName: _fullName,
+                                cpf: _cpf,
+                                birthDate: _birthDate,
+                                gender: _gender,
                               ),
                             )
                                 .animate()
@@ -607,6 +598,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                             _Section(
                               title: 'Veículo · visível para o aluno',
                               child: _VehicleSection(
+                                locked: _vehicleLocked,
+                                cooldownLabel: _cooldownLabel,
                                 fipeType: _fipeType,
                                 vehicleType: _vehicleType,
                                 onVehicleTypeChanged: (VehicleType? t) =>
@@ -811,6 +804,8 @@ class _Section extends StatelessWidget {
 // ─── Seção de veículo (FIPE + dados) ─────────────────────────────────
 class _VehicleSection extends ConsumerWidget {
   const _VehicleSection({
+    required this.locked,
+    required this.cooldownLabel,
     required this.fipeType,
     required this.vehicleType,
     required this.onVehicleTypeChanged,
@@ -836,6 +831,10 @@ class _VehicleSection extends ConsumerWidget {
     required this.onPickBack,
   });
 
+  /// `true` quando a última alteração foi há menos de 7 dias.
+  /// Bloqueia toda a seção e mostra um banner com o countdown.
+  final bool locked;
+  final String cooldownLabel;
   final VehicleType fipeType;
   final VehicleType? vehicleType;
   final ValueChanged<VehicleType?> onVehicleTypeChanged;
@@ -866,6 +865,25 @@ class _VehicleSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (locked) _CooldownBanner(label: cooldownLabel),
+        if (locked) const SizedBox(height: 12),
+        // AbsorbPointer + Opacity: bloqueia interação sem destruir o
+        // layout. O save também rejeita do lado da UI (snack explicativo).
+        AbsorbPointer(
+          absorbing: locked,
+          child: Opacity(
+            opacity: locked ? 0.55 : 1.0,
+            child: _vehicleFields(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _vehicleFields() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -1255,4 +1273,169 @@ class _PickOutcome {
 
   final _PickKind kind;
   final File? file;
+}
+
+// ─── Identidade somente-leitura ─────────────────────────────────────
+/// Card que mostra nome, CPF, data de nascimento e sexo do instrutor sem
+/// permitir edição. Esses dados vêm do cadastro inicial e são imutáveis
+/// pelo app (integridade dos documentos enviados ao DETRAN).
+class _IdentityCard extends StatelessWidget {
+  const _IdentityCard({
+    required this.fullName,
+    required this.cpf,
+    required this.birthDate,
+    required this.gender,
+  });
+
+  final String fullName;
+  final String? cpf;
+  final DateTime? birthDate;
+  final Gender? gender;
+
+  String? get _birthDateLabel {
+    if (birthDate == null) return null;
+    final String d = birthDate!.day.toString().padLeft(2, '0');
+    final String m = birthDate!.month.toString().padLeft(2, '0');
+    return '$d/$m/${birthDate!.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<({String label, String? value, IconData icon})> rows =
+        <({String label, String? value, IconData icon})>[
+      (
+        label: 'Nome completo',
+        value: fullName.isEmpty ? null : fullName,
+        icon: PhosphorIconsRegular.user,
+      ),
+      (
+        label: 'CPF',
+        value: cpf,
+        icon: PhosphorIconsRegular.identificationCard,
+      ),
+      (
+        label: 'Data de nascimento',
+        value: _birthDateLabel,
+        icon: PhosphorIconsRegular.calendar,
+      ),
+      (
+        label: 'Sexo',
+        value: gender?.label,
+        icon: PhosphorIconsRegular.userCircle,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        for (int i = 0; i < rows.length; i++) ...<Widget>[
+          if (i > 0)
+            Divider(
+              height: 1,
+              color: AppColors.textPrimary.withOpacity(0.08),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  rows[i].icon,
+                  size: 18,
+                  color: AppColors.textMuted,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        rows[i].label,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        rows[i].value ?? '—',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  PhosphorIconsRegular.lockSimple,
+                  size: 14,
+                  color: AppColors.textMuted,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ─── Banner de cooldown ─────────────────────────────────────────────
+/// Avisa que a próxima alteração no veículo só poderá ocorrer após X dias.
+class _CooldownBanner extends StatelessWidget {
+  const _CooldownBanner({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.warning.withOpacity(0.6),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: <Widget>[
+          const Icon(
+            PhosphorIconsFill.hourglassMedium,
+            size: 20,
+            color: AppColors.warning,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: AppColors.textPrimary,
+                  height: 1.35,
+                ),
+                children: <InlineSpan>[
+                  const TextSpan(
+                    text: 'Veículo bloqueado para edição.\n',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  TextSpan(
+                    text: 'Você pode alterar os dados a cada 7 dias. '
+                        'Próxima alteração disponível em ',
+                  ),
+                  TextSpan(
+                    text: label,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const TextSpan(text: '.'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

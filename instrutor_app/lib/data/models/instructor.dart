@@ -19,6 +19,7 @@ class Instructor {
     this.vehiclePlate,
     this.vehiclePhotoFrontUrl,
     this.vehiclePhotoBackUrl,
+    this.vehicleLastChangedAt,
     this.categories = const <VehicleCategory>[],
     this.pricePerClass,
     this.isActive = true,
@@ -51,6 +52,11 @@ class Instructor {
   final String? vehiclePhotoFrontUrl;
   final String? vehiclePhotoBackUrl;
 
+  /// Marca quando o instrutor alterou os dados do veículo pela última vez.
+  /// Usado para aplicar cooldown de 7 dias e impedir trocas frequentes
+  /// (anti-fraude). Null = nunca foi alterado pós-cadastro.
+  final DateTime? vehicleLastChangedAt;
+
   // Comercial
   final List<VehicleCategory> categories;
   final double? pricePerClass;
@@ -81,6 +87,7 @@ class Instructor {
     String? vehiclePlate,
     String? vehiclePhotoFrontUrl,
     String? vehiclePhotoBackUrl,
+    DateTime? vehicleLastChangedAt,
     List<VehicleCategory>? categories,
     double? pricePerClass,
     bool? isActive,
@@ -106,6 +113,8 @@ class Instructor {
       vehiclePhotoFrontUrl:
           vehiclePhotoFrontUrl ?? this.vehiclePhotoFrontUrl,
       vehiclePhotoBackUrl: vehiclePhotoBackUrl ?? this.vehiclePhotoBackUrl,
+      vehicleLastChangedAt:
+          vehicleLastChangedAt ?? this.vehicleLastChangedAt,
       categories: categories ?? this.categories,
       pricePerClass: pricePerClass ?? this.pricePerClass,
       isActive: isActive ?? this.isActive,
@@ -135,6 +144,9 @@ class Instructor {
       vehiclePlate: json['vehicle_plate'] as String?,
       vehiclePhotoFrontUrl: json['vehicle_photo_front_url'] as String?,
       vehiclePhotoBackUrl: json['vehicle_photo_back_url'] as String?,
+      vehicleLastChangedAt: json['vehicle_last_changed_at'] == null
+          ? null
+          : DateTime.parse(json['vehicle_last_changed_at'] as String),
       categories: ((json['categories'] as List<dynamic>?) ?? <dynamic>[])
           .map((dynamic c) => VehicleCategory.fromJson(c as String))
           .toList(growable: false),
@@ -164,6 +176,7 @@ class Instructor {
         'vehicle_plate': vehiclePlate,
         'vehicle_photo_front_url': vehiclePhotoFrontUrl,
         'vehicle_photo_back_url': vehiclePhotoBackUrl,
+        'vehicle_last_changed_at': vehicleLastChangedAt?.toIso8601String(),
         'categories':
             categories.map((VehicleCategory c) => c.toJson()).toList(),
         'price_per_class': pricePerClass,

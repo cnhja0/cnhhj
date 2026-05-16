@@ -22,6 +22,7 @@ class InstructorUpdate {
     this.vehiclePlate,
     this.vehiclePhotoFrontUrl,
     this.vehiclePhotoBackUrl,
+    this.vehicleLastChangedAt,
     this.categories,
     this.pricePerClass,
     this.isActive,
@@ -42,6 +43,7 @@ class InstructorUpdate {
   final String? vehiclePlate;
   final String? vehiclePhotoFrontUrl;
   final String? vehiclePhotoBackUrl;
+  final DateTime? vehicleLastChangedAt;
   final List<VehicleCategory>? categories;
   final double? pricePerClass;
   final bool? isActive;
