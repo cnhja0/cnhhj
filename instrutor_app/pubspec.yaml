@@ -48,8 +48,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # IMPORTANTE: Flutter NÃO inclui subpastas recursivamente. Cada
+  # subdiretório com assets precisa ser listado aqui explicitamente.
   assets:
     - assets/images/
+    - assets/images/banners/   # criativos rotativos da Home
+    - assets/images/login/     # banner promo do login
     - assets/icons/
 
   # O `.env` não é declarado como asset porque está no .gitignore — usado
