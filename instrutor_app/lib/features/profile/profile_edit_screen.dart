@@ -343,16 +343,15 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         _newVehicleFrontPhoto != null || _newVehicleBackPhoto != null;
     final bool anyVehicleChange = vehicleChanged || vehiclePhotoChanged;
 
-    if (anyVehicleChange && _vehicleLocked) {
-      CnhhjSnack.error(
-        context,
-        'Você pode alterar o veículo a cada 7 dias. '
-        'Próxima alteração em $_cooldownLabel.',
-      );
-      return;
-    }
+    // C2: quando o veículo está em cooldown E o usuário mexeu em algum
+    // campo de veículo, NÃO abortamos o save inteiro — salvamos o que é
+    // permitido (avatar/celular/bio) e descartamos a parte do veículo
+    // com aviso. Sem isso, o usuário perdia toda edição se tocou no
+    // veículo por engano.
+    final bool blockVehicle = anyVehicleChange && _vehicleLocked;
 
-    if (vehicleChanged) {
+    if (anyVehicleChange && !_vehicleLocked) {
+      // Validação só roda quando o save realmente vai persistir o veículo.
       final List<String> missing = <String>[
         if (_vehicleType == null) 'tipo',
         if (brand.isEmpty) 'marca',
@@ -380,6 +379,11 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       }
     }
 
+    // Só passamos campos de veículo pro controller quando há mudança real
+    // E não está bloqueado. Caso contrário, null = "preserva o que está
+    // no banco" (graças ao copyWith no mock).
+    final bool persistVehicle = anyVehicleChange && !_vehicleLocked;
+
     final bool ok = await ref
         .read(profileEditControllerProvider.notifier)
         .save(
@@ -395,24 +399,38 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           bio: _bioController.text.trim().isEmpty
               ? null
               : _bioController.text.trim(),
-          vehicleType: _vehicleType,
-          vehicleBrand: brand.isEmpty ? null : brand,
-          vehicleModel: model.isEmpty ? null : model,
-          vehicleYear: int.tryParse(yearStr),
-          vehicleTransmission: _transmission,
-          vehiclePlate: plate.isEmpty ? null : Validators.normalizePlate(plate),
-          vehicleChanged: anyVehicleChange,
-          vehiclePhotoFrontUrl:
-              _newVehicleFrontPhoto?.path ?? _currentVehicleFrontUrl,
-          vehiclePhotoBackUrl:
-              _newVehicleBackPhoto?.path ?? _currentVehicleBackUrl,
+          vehicleType: persistVehicle ? _vehicleType : null,
+          vehicleBrand: persistVehicle && brand.isNotEmpty ? brand : null,
+          vehicleModel: persistVehicle && model.isNotEmpty ? model : null,
+          vehicleYear: persistVehicle ? parsedYear : null,
+          vehicleTransmission: persistVehicle ? _transmission : null,
+          vehiclePlate: persistVehicle && plate.isNotEmpty
+              ? Validators.normalizePlate(plate)
+              : null,
+          vehicleChanged: persistVehicle,
+          vehiclePhotoFrontUrl: persistVehicle
+              ? (_newVehicleFrontPhoto?.path ?? _currentVehicleFrontUrl)
+              : null,
+          vehiclePhotoBackUrl: persistVehicle
+              ? (_newVehicleBackPhoto?.path ?? _currentVehicleBackUrl)
+              : null,
         );
 
     if (!mounted) return;
     if (ok) {
       setState(() => _dirty = false);
-      CnhhjSnack.success(context, 'Perfil atualizado!');
-      context.pop();
+      if (blockVehicle) {
+        // Salvou avatar/celular/bio mas descartou as alterações de
+        // veículo por cooldown. Avisa o usuário sem fechar a tela —
+        // ele decide se sai ou se ajusta os campos.
+        CnhhjSnack.info(
+          context,
+          'Outros dados salvos. Veículo bloqueado por $_cooldownLabel.',
+        );
+      } else {
+        CnhhjSnack.success(context, 'Perfil atualizado!');
+        context.pop();
+      }
     } else {
       final String? err =
           ref.read(profileEditControllerProvider).errorMessage;

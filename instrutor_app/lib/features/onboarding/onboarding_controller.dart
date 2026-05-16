@@ -131,6 +131,10 @@ class OnboardingController extends Notifier<OnboardingState> {
           cnhPhotoUrl: d.cnhPhoto?.path,
           detranCertificateUrl: d.detranCertificate?.path,
           categories: d.categories,
+          // I1: marca o relógio do cooldown já no cadastro. Assim, qualquer
+          // ajuste pós-onboarding (ex: trocar foto do carro) cai sob o
+          // mesmo regime de 7 dias — alinhando expectativa do usuário.
+          vehicleLastChangedAt: DateTime.now(),
         ),
       );
 
