@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -154,6 +155,14 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
     final DateFormat df = DateFormat('EEE, dd/MM \'às\' HH:mm', 'pt_BR');
 
     return CnhhjCard(
+      // Toque no card abre o perfil do aluno com o bookingId em context
+      // — assim a tela do perfil mostra Aceitar/Recusar no rodapé.
+      // Os botões dentro do card consomem o próprio tap antes de propagar.
+      onTap: _busy
+          ? null
+          : () => context.push(
+                '/students/${booking.studentId}?bookingId=${booking.id}',
+              ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[

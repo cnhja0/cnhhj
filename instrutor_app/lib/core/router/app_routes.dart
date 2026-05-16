@@ -30,4 +30,8 @@ class AppRoutes {
   static const String notifications  = '/notifications';
   static const String guide          = '/guide';
   static const String support        = '/support';
+
+  /// Perfil de um aluno (visto pelo instrutor). Aceita query param opcional
+  /// `bookingId` — quando presente, mostra rodapé com Aceitar/Recusar.
+  static const String studentProfile = '/students/:studentId';
 }

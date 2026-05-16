@@ -14,6 +14,7 @@ import '../../features/onboarding/onboarding_flow_screen.dart';
 import '../../features/onboarding/splash_screen.dart';
 import '../../features/profile/profile_edit_screen.dart';
 import '../../features/reviews/reviews_screen.dart';
+import '../../features/students/student_profile_screen.dart';
 import 'app_routes.dart';
 
 /// Cria uma `Page` com transição fade + slide-up suave.
@@ -187,6 +188,19 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
         name: 'notifications',
         pageBuilder: (BuildContext context, GoRouterState state) =>
             _fadeSlidePage(child: const NotificationsScreen(), state: state),
+      ),
+      // ─── Perfil do aluno (visto pelo instrutor) ──────────────────
+      GoRoute(
+        path: AppRoutes.studentProfile,
+        name: 'student-profile',
+        pageBuilder: (BuildContext context, GoRouterState state) =>
+            _fadeSlidePage(
+              child: StudentProfileScreen(
+                studentId: state.pathParameters['studentId']!,
+                bookingId: state.uri.queryParameters['bookingId'],
+              ),
+              state: state,
+            ),
       ),
     ],
     errorBuilder: (BuildContext context, GoRouterState state) => Scaffold(
