@@ -91,21 +91,21 @@ class _HomeBannerState extends ConsumerState<HomeBanner> {
   /// classe [HomeBanner] para instruções detalhadas.
   List<_BannerSlide> _slides(BuildContext context, WidgetRef ref) {
     return <_BannerSlide>[
-      // ─── Criativo 1 — "Termine seu cadastro" ────────────────────
+      // ─── Criativo 1 ─────────────────────────────────────────────
       _BannerSlide.image(
-        imageAsset: 'assets/images/banners/banner_01_termine_cadastro.png',
+        imageAsset: 'assets/images/banners/banner_1.png',
         onTap: () => context.push(AppRoutes.profileEdit),
       ),
 
-      // ─── Criativo 2 — "Como o CNHhj funciona" ───────────────────
+      // ─── Criativo 2 ─────────────────────────────────────────────
       _BannerSlide.image(
-        imageAsset: 'assets/images/banners/banner_02_como_funciona.png',
+        imageAsset: 'assets/images/banners/banner_2.png',
         onTap: () => ref.read(tabIndexProvider.notifier).state = 4, // aba Mais
       ),
 
-      // ─── Criativo 3 — "A fórmula: nota + alunos = R$" ───────────
+      // ─── Criativo 3 ─────────────────────────────────────────────
       _BannerSlide.image(
-        imageAsset: 'assets/images/banners/banner_03_formula_nota.png',
+        imageAsset: 'assets/images/banners/banner_3.png',
         onTap: () => ref.read(tabIndexProvider.notifier).state = 1, // aba Aula
       ),
 
