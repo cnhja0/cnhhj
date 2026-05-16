@@ -34,15 +34,15 @@ class InstructorUpdate {
   final int? serviceRadiusKm;
   final String? cnhPhotoUrl;
   final String? detranCertificateUrl;
-  final dynamic vehicleType;
+  final VehicleType? vehicleType;
   final String? vehicleBrand;
   final String? vehicleModel;
   final int? vehicleYear;
-  final dynamic vehicleTransmission;
+  final Transmission? vehicleTransmission;
   final String? vehiclePlate;
   final String? vehiclePhotoFrontUrl;
   final String? vehiclePhotoBackUrl;
-  final List<dynamic>? categories;
+  final List<VehicleCategory>? categories;
   final double? pricePerClass;
   final bool? isActive;
 }

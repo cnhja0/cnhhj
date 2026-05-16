@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
+import '../../../core/utils/validators.dart';
 import '../../../data/models/enums.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../onboarding_controller.dart';
@@ -99,9 +100,7 @@ class _Step1PersonalDataState extends ConsumerState<Step1PersonalData> {
               label: 'Nome completo',
               hint: 'Digite seu nome completo',
               textInputAction: TextInputAction.next,
-              validator: (String? v) => (v == null || v.trim().length < 3)
-                  ? 'Informe seu nome completo'
-                  : null,
+              validator: Validators.fullName,
             ),
             const SizedBox(height: 12),
             CnhhjTextField(
@@ -111,10 +110,7 @@ class _Step1PersonalDataState extends ConsumerState<Step1PersonalData> {
               keyboardType: TextInputType.number,
               inputFormatters: <TextInputFormatter>[_cpfMask],
               textInputAction: TextInputAction.next,
-              validator: (String? v) =>
-                  (v == null || _cpfMask.getUnmaskedText().length != 11)
-                      ? 'CPF inválido'
-                      : null,
+              validator: Validators.cpf,
             ),
             const SizedBox(height: 12),
             CnhhjDateField(
@@ -136,15 +132,12 @@ class _Step1PersonalDataState extends ConsumerState<Step1PersonalData> {
             const SizedBox(height: 12),
             CnhhjTextField(
               controller: _phoneController,
-              label: 'Telefone',
+              label: 'Celular',
               hint: '(11) 91234-5678',
               keyboardType: TextInputType.phone,
               inputFormatters: <TextInputFormatter>[_phoneMask],
               textInputAction: TextInputAction.done,
-              validator: (String? v) =>
-                  (v == null || _phoneMask.getUnmaskedText().length < 10)
-                      ? 'Telefone inválido'
-                      : null,
+              validator: Validators.mobilePhone,
             ),
           ],
         ),

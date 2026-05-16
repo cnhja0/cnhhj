@@ -17,6 +17,7 @@ export 'inputs/cnhhj_text_field.dart';
 export 'inputs/cnhhj_password_field.dart';
 export 'inputs/cnhhj_date_field.dart';
 export 'inputs/cnhhj_dropdown.dart';
+export 'inputs/cnhhj_searchable_picker.dart';
 export 'inputs/cnhhj_checkbox.dart';
 export 'inputs/cnhhj_photo_picker.dart';
 

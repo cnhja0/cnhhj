@@ -15,24 +15,31 @@ class ProfileEditState {
   final bool saving;
   final String? errorMessage;
 
-  ProfileEditState copyWith({bool? saving, String? errorMessage}) {
+  /// Sentinel: distingue "não passou errorMessage" de "passou null".
+  static const Object _kSentinel = Object();
+
+  ProfileEditState copyWith({
+    bool? saving,
+    Object? errorMessage = _kSentinel,
+  }) {
     return ProfileEditState(
       saving: saving ?? this.saving,
-      errorMessage: errorMessage,
+      errorMessage: identical(errorMessage, _kSentinel)
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 }
 
 /// Controller para a tela de edição de perfil.
 ///
-/// O state guarda apenas flags transitórias (saving, erro). Os valores
-/// dos campos vivem dentro do widget (TextEditingControllers) porque
-/// pertencem ao form, não ao modelo persistente.
+/// Salva profile (identidade pessoal) e instructor (bio + dados do veículo
+/// visíveis para o aluno) em sequência. Invalida os providers correlatos
+/// para que Home, Configurar Aula, Mais e a vitrine do aluno atualizem.
 class ProfileEditController extends Notifier<ProfileEditState> {
   @override
   ProfileEditState build() => const ProfileEditState();
 
-  /// Salva profile + bio (do instructor). Retorna true se salvou.
   Future<bool> save({
     required String userId,
     required String fullName,
@@ -42,6 +49,15 @@ class ProfileEditController extends Notifier<ProfileEditState> {
     String? phone,
     String? avatarUrl,
     String? bio,
+    // Veículo — todos opcionais; só passa quando há mudança
+    VehicleType? vehicleType,
+    String? vehicleBrand,
+    String? vehicleModel,
+    int? vehicleYear,
+    Transmission? vehicleTransmission,
+    String? vehiclePlate,
+    String? vehiclePhotoFrontUrl,
+    String? vehiclePhotoBackUrl,
   }) async {
     state = const ProfileEditState(saving: true);
     try {
@@ -56,9 +72,35 @@ class ProfileEditController extends Notifier<ProfileEditState> {
         phone: phone,
         avatarUrl: avatarUrl,
       );
-      if (bio != null) {
-        await repo.upsert(userId, InstructorUpdate(bio: bio));
+
+      // Junta bio + veículo num único upsert para minimizar round-trips.
+      final bool hasInstructorPatch = bio != null ||
+          vehicleType != null ||
+          vehicleBrand != null ||
+          vehicleModel != null ||
+          vehicleYear != null ||
+          vehicleTransmission != null ||
+          vehiclePlate != null ||
+          vehiclePhotoFrontUrl != null ||
+          vehiclePhotoBackUrl != null;
+
+      if (hasInstructorPatch) {
+        await repo.upsert(
+          userId,
+          InstructorUpdate(
+            bio: bio,
+            vehicleType: vehicleType,
+            vehicleBrand: vehicleBrand,
+            vehicleModel: vehicleModel,
+            vehicleYear: vehicleYear,
+            vehicleTransmission: vehicleTransmission,
+            vehiclePlate: vehiclePlate,
+            vehiclePhotoFrontUrl: vehiclePhotoFrontUrl,
+            vehiclePhotoBackUrl: vehiclePhotoBackUrl,
+          ),
+        );
       }
+
       // Atualiza Home, TabMore, tela de Configurar Aula etc.
       ref.invalidate(currentProfileProvider);
       ref.invalidate(currentInstructorProvider);

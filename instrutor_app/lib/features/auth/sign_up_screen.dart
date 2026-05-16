@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/router/app_routes.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/validators.dart';
 import '../../shared/widgets/widgets.dart';
 import 'sign_up_controller.dart';
 
@@ -25,6 +26,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _acceptedTerms = false;
   bool _acceptedPromos = false;
+  int _passwordStrength = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() {
+      final int s = Validators.passwordStrength(_passwordController.text);
+      if (s != _passwordStrength) setState(() => _passwordStrength = s);
+    });
+  }
 
   @override
   void dispose() {
@@ -48,9 +59,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final bool ok = await ref
         .read(signUpControllerProvider.notifier)
         .createInstructorAccount(
-          email: _emailController.text,
+          email: Validators.normalizeEmail(_emailController.text),
           password: _passwordController.text,
-          fullName: _nameController.text,
+          fullName: _nameController.text.trim(),
         );
 
     if (!mounted) return;
@@ -119,10 +130,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         hint: 'Nome completo',
                         icon: PhosphorIconsRegular.user,
                         textInputAction: TextInputAction.next,
-                        validator: (String? v) =>
-                            (v == null || v.trim().length < 3)
-                                ? 'Informe seu nome completo'
-                                : null,
+                        validator: Validators.fullName,
                       ),
                       const SizedBox(height: 10),
                       CnhhjTextField(
@@ -131,27 +139,17 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         icon: PhosphorIconsRegular.envelope,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
-                        validator: (String? v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Informe o e-mail';
-                          }
-                          if (!v.contains('@')) return 'E-mail inválido';
-                          return null;
-                        },
+                        validator: Validators.email,
                       ),
                       const SizedBox(height: 10),
                       CnhhjPasswordField(
                         controller: _passwordController,
                         hint: 'Crie uma senha',
                         textInputAction: TextInputAction.next,
-                        validator: (String? v) {
-                          if (v == null || v.isEmpty) return 'Crie uma senha';
-                          if (v.length < 6) {
-                            return 'A senha precisa ter pelo menos 6 caracteres';
-                          }
-                          return null;
-                        },
+                        validator: Validators.password,
                       ),
+                      if (_passwordController.text.isNotEmpty)
+                        _PasswordStrengthBar(strength: _passwordStrength),
                       const SizedBox(height: 10),
                       CnhhjPasswordField(
                         controller: _confirmController,
@@ -218,6 +216,67 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Barra horizontal de 4 segmentos que pinta de acordo com a força da
+/// senha (0..4). Discreta — não exige interação, só feedback visual.
+class _PasswordStrengthBar extends StatelessWidget {
+  const _PasswordStrengthBar({required this.strength});
+  final int strength; // 0..4
+
+  static const List<String> _labels = <String>[
+    '',
+    'Muito fraca',
+    'Fraca',
+    'Boa',
+    'Forte',
+  ];
+
+  Color _segColor(int idx) {
+    if (idx >= strength) return AppColors.textPrimary.withOpacity(0.1);
+    if (strength <= 1) return AppColors.error;
+    if (strength == 2) return AppColors.warning;
+    if (strength == 3) return AppColors.primary;
+    return AppColors.success;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: List<Widget>.generate(
+              4,
+              (int i) => Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: i < 3 ? 4 : 0),
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: _segColor(i),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (strength > 0) ...<Widget>[
+            const SizedBox(height: 4),
+            Text(
+              _labels[strength],
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

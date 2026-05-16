@@ -50,7 +50,7 @@ class MockState {
       id: currentInstructorId,
       role: UserRole.instrutor,
       fullName: 'Carlos Silva',
-      cpf: '123.456.789-00',
+      cpf: '123.456.789-09',
       birthDate: DateTime(1985, 4, 12),
       gender: Gender.masculino,
       phone: '(11) 91234-5678',
